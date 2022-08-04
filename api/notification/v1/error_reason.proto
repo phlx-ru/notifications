@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package notification.v1;
+
+import "errors/errors.proto";
+
+option go_package = "notifications/api/notification/v1;v1";
+
+enum ErrorReason {
+  option (errors.default_code) = 500;
+
+  INPUT_UNSPECIFIED = 0 [(errors.code) = 400];
+  NOTIFICATION_NOT_FOUND = 1 [(errors.code) = 404];
+}

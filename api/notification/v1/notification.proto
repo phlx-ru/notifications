@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package notification.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "notifications/api/notification/v1;v1";
+
+service Notification {
+  rpc CreatingTest (CreatingTestRequest) returns (CreatingTestReply) {
+    option (google.api.http) = {
+      get: "/notification"
+    };
+  }
+
+  rpc Enqueue (SendRequest) returns (EnqueueResponse) {
+    option (google.api.http) = {
+      post: "/enqueue"
+      body: "*"
+    };
+  }
+
+  rpc Send (SendRequest) returns (SendResponse) {
+    option (google.api.http) = {
+      post: "/send"
+      body: "*"
+    };
+  }
+}
+
+message CreatingTestRequest {
+  string message = 1;
+}
+
+message CreatingTestReply {
+  string result = 1;
+}
+
+message SendRequest {
+  enum Type {
+    email = 0;
+    sms = 1;
+    push = 2;
+    whatsapp = 3;
+    telegram = 4;
+  }
+  enum Status {
+    draft = 0;
+    pending = 1;
+    sent = 3;
+    retry = 4;
+    failed = 5;
+  }
+  Type type = 1;
+  map<string, string> payload = 2;
+  uint64 ttl = 3;
+  Status status = 4;
+  google.protobuf.Timestamp plannedAt = 5;
+}
+
+message SendResponse {}
+
+message EnqueueResponse {
+  int64 id = 1;
+}
+
+message PayloadEmail {
+  string to = 1;
+  string subject = 2;
+  string body = 3;
+  bool html = 4;
+}

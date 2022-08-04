@@ -6,6 +6,8 @@
 package main
 
 import (
+	"notifications/internal/senders"
+
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -17,7 +19,12 @@ import (
 	"notifications/internal/service"
 )
 
+// wireData init database
+func wireData(*conf.Data, log.Logger) (*data.Data, func(), error) {
+	panic(wire.Build(data.ProviderDataSet))
+}
+
 // wireApp init kratos application.
-func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) {
-	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, service.ProviderSet, newApp))
+func wireApp(*data.Data, *conf.Server, *senders.Senders, log.Logger) (*kratos.App, error) {
+	panic(wire.Build(server.ProviderSet, data.ProviderRepoSet, biz.ProviderSet, service.ProviderSet, newApp))
 }

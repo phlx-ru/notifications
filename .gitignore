@@ -36,3 +36,4 @@ bin/
 *.swp
 
 .env
+.env.*

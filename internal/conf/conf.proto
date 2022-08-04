@@ -6,8 +6,20 @@ option go_package = "notifications/internal/conf;conf";
 import "google/protobuf/duration.proto";
 
 message Bootstrap {
-  Server server = 1;
-  Data data = 2;
+  Log log = 1;
+  Metrics metrics = 2;
+  Server server = 3;
+  Data data = 4;
+  Senders senders = 5;
+}
+
+message Log {
+  string level = 1;
+}
+
+message Metrics {
+  string address = 1;
+  bool mute = 2;
 }
 
 message Server {
@@ -27,15 +39,24 @@ message Server {
 
 message Data {
   message Database {
+    enum Migrate {
+      none = 0;
+      soft = 1;
+      hard = 2;
+    }
     string driver = 1;
     string source = 2;
-  }
-  message Redis {
-    string network = 1;
-    string addr = 2;
-    google.protobuf.Duration read_timeout = 3;
-    google.protobuf.Duration write_timeout = 4;
+    Migrate migrate = 3;
   }
   Database database = 1;
-  Redis redis = 2;
+}
+
+message Senders {
+  message Email {
+    string from = 1;
+    string address = 2;
+    string username = 3;
+    string password = 4;
+  }
+  Email email = 1;
 }

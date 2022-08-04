@@ -1,3 +1,8 @@
+log:
+  level: ${LOG_LEVEL:debug} # vendor/github.com/go-kratos/kratos/v2/log/level.go
+metrics:
+  address: ${METRICS_ADDRESS:localhost:8125}
+  mute: ${METRICS_MUTE:true}
 server:
   http:
     addr: 0.0.0.0:8000
@@ -8,4 +13,11 @@ server:
 data:
   database:
     driver: postgres
-    source: ${POSTGRES_USER:postgres}:${POSTGRES_PASS:postgres}@tcp(${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432})/${POSTGRES_DB:postgres}
+    source: host=${POSTGRES_HOST:localhost} port=${POSTGRES_PORT:5432} user=${POSTGRES_USER:postgres} password=${POSTGRES_PASS:postgres} dbname=${POSTGRES_DB:notifications} sslmode=disable
+    migrate: soft
+senders:
+  email:
+    from: ${SENDERS_EMAIL_FROM} # ex: Jordan Wright <test@gmail.com>
+    address: ${SENDERS_EMAIL_ADDRESS} # ex: smtp.gmail.com:587
+    username: ${SENDERS_EMAIL_USERNAME}
+    password: ${SENDERS_EMAIL_PASSWORD}
