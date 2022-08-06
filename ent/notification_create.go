@@ -28,15 +28,15 @@ func (nc *NotificationCreate) SetSenderID(i int) *NotificationCreate {
 }
 
 // SetType sets the "type" field.
-func (nc *NotificationCreate) SetType(s string) *NotificationCreate {
-	nc.mutation.SetType(s)
+func (nc *NotificationCreate) SetType(st schema.NotificationType) *NotificationCreate {
+	nc.mutation.SetType(st)
 	return nc
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableType(s *string) *NotificationCreate {
-	if s != nil {
-		nc.SetType(*s)
+func (nc *NotificationCreate) SetNillableType(st *schema.NotificationType) *NotificationCreate {
+	if st != nil {
+		nc.SetType(*st)
 	}
 	return nc
 }
@@ -54,15 +54,15 @@ func (nc *NotificationCreate) SetTTL(i int) *NotificationCreate {
 }
 
 // SetStatus sets the "status" field.
-func (nc *NotificationCreate) SetStatus(s string) *NotificationCreate {
-	nc.mutation.SetStatus(s)
+func (nc *NotificationCreate) SetStatus(ss schema.NotificationStatus) *NotificationCreate {
+	nc.mutation.SetStatus(ss)
 	return nc
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableStatus(s *string) *NotificationCreate {
-	if s != nil {
-		nc.SetStatus(*s)
+func (nc *NotificationCreate) SetNillableStatus(ss *schema.NotificationStatus) *NotificationCreate {
+	if ss != nil {
+		nc.SetStatus(*ss)
 	}
 	return nc
 }
@@ -81,6 +81,20 @@ func (nc *NotificationCreate) SetNillableCreatedAt(t *time.Time) *NotificationCr
 	return nc
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (nc *NotificationCreate) SetUpdatedAt(t time.Time) *NotificationCreate {
+	nc.mutation.SetUpdatedAt(t)
+	return nc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (nc *NotificationCreate) SetNillableUpdatedAt(t *time.Time) *NotificationCreate {
+	if t != nil {
+		nc.SetUpdatedAt(*t)
+	}
+	return nc
+}
+
 // SetPlannedAt sets the "planned_at" field.
 func (nc *NotificationCreate) SetPlannedAt(t time.Time) *NotificationCreate {
 	nc.mutation.SetPlannedAt(t)
@@ -95,16 +109,16 @@ func (nc *NotificationCreate) SetNillablePlannedAt(t *time.Time) *NotificationCr
 	return nc
 }
 
-// SetRetryAt sets the "retry_at" field.
-func (nc *NotificationCreate) SetRetryAt(t time.Time) *NotificationCreate {
-	nc.mutation.SetRetryAt(t)
+// SetRetries sets the "retries" field.
+func (nc *NotificationCreate) SetRetries(i int) *NotificationCreate {
+	nc.mutation.SetRetries(i)
 	return nc
 }
 
-// SetNillableRetryAt sets the "retry_at" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableRetryAt(t *time.Time) *NotificationCreate {
-	if t != nil {
-		nc.SetRetryAt(*t)
+// SetNillableRetries sets the "retries" field if the given value is not nil.
+func (nc *NotificationCreate) SetNillableRetries(i *int) *NotificationCreate {
+	if i != nil {
+		nc.SetRetries(*i)
 	}
 	return nc
 }
@@ -212,9 +226,17 @@ func (nc *NotificationCreate) defaults() {
 		v := notification.DefaultCreatedAt()
 		nc.mutation.SetCreatedAt(v)
 	}
+	if _, ok := nc.mutation.UpdatedAt(); !ok {
+		v := notification.DefaultUpdatedAt()
+		nc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := nc.mutation.PlannedAt(); !ok {
 		v := notification.DefaultPlannedAt()
 		nc.mutation.SetPlannedAt(v)
+	}
+	if _, ok := nc.mutation.Retries(); !ok {
+		v := notification.DefaultRetries
+		nc.mutation.SetRetries(v)
 	}
 }
 
@@ -227,7 +249,7 @@ func (nc *NotificationCreate) check() error {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Notification.type"`)}
 	}
 	if v, ok := nc.mutation.GetType(); ok {
-		if err := notification.TypeValidator(v); err != nil {
+		if err := notification.TypeValidator(string(v)); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Notification.type": %w`, err)}
 		}
 	}
@@ -241,15 +263,21 @@ func (nc *NotificationCreate) check() error {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Notification.status"`)}
 	}
 	if v, ok := nc.mutation.Status(); ok {
-		if err := notification.StatusValidator(v); err != nil {
+		if err := notification.StatusValidator(string(v)); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Notification.status": %w`, err)}
 		}
 	}
 	if _, ok := nc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Notification.created_at"`)}
 	}
+	if _, ok := nc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Notification.updated_at"`)}
+	}
 	if _, ok := nc.mutation.PlannedAt(); !ok {
 		return &ValidationError{Name: "planned_at", err: errors.New(`ent: missing required field "Notification.planned_at"`)}
+	}
+	if _, ok := nc.mutation.Retries(); !ok {
+		return &ValidationError{Name: "retries", err: errors.New(`ent: missing required field "Notification.retries"`)}
 	}
 	return nil
 }
@@ -326,6 +354,14 @@ func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 		})
 		_node.CreatedAt = value
 	}
+	if value, ok := nc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: notification.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
+	}
 	if value, ok := nc.mutation.PlannedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -334,13 +370,13 @@ func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 		})
 		_node.PlannedAt = value
 	}
-	if value, ok := nc.mutation.RetryAt(); ok {
+	if value, ok := nc.mutation.Retries(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt,
 			Value:  value,
-			Column: notification.FieldRetryAt,
+			Column: notification.FieldRetries,
 		})
-		_node.RetryAt = &value
+		_node.Retries = value
 	}
 	if value, ok := nc.mutation.SentAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

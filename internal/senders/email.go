@@ -17,21 +17,25 @@ type Email struct {
 }
 
 func (e *Email) SendText(to []string, subject, body string) error {
-	return e.send(&email.Email{
-		To:      to,
-		From:    e.From,
-		Subject: subject,
-		Text:    []byte(body),
-	})
+	return e.send(
+		&email.Email{
+			To:      to,
+			From:    e.From,
+			Subject: subject,
+			Text:    []byte(body),
+		},
+	)
 }
 
 func (e *Email) SendHTML(to []string, subject, body string) error {
-	return e.send(&email.Email{
-		To:      to,
-		From:    e.From,
-		Subject: subject,
-		HTML:    []byte(body),
-	})
+	return e.send(
+		&email.Email{
+			To:      to,
+			From:    e.From,
+			Subject: subject,
+			HTML:    []byte(body),
+		},
+	)
 }
 
 func (e *Email) send(mail *email.Email) error {
@@ -42,7 +46,7 @@ func (e *Email) send(mail *email.Email) error {
 func NewEmail(from, addr, username, password string) (*Email, error) {
 	u, err := url.Parse(addr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse smtp relay address '%s': %w", addr, err)
+		return nil, fmt.Errorf("failed to parse smtp relay address '%s': %v", addr, err)
 	}
 	if u.Scheme == "" {
 		return nil, fmt.Errorf("smtp relay address '%s' is incorrect", addr)

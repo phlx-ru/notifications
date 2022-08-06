@@ -119,6 +119,7 @@ func (Notification) Fields() []ent.Field {
 		field.String("type").
 			Default(TypeEmail.String()).
 			Validate(ValidateType).
+			GoType(NotificationType(``)).
 			Comment("types in (sms|email|whatsapp|push)"),
 
 		field.JSON("payload", Payload{}).
@@ -130,21 +131,25 @@ func (Notification) Fields() []ent.Field {
 		field.String("status").
 			Default(StatusDraft.String()).
 			Validate(ValidateStatus).
+			GoType(NotificationStatus(``)).
 			Comment("statuses in (draft|pending|sent|retry|fail)"),
 
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
-			Comment("creation time of record"),
+			Comment("creation time of notification"),
+
+		field.Time("updated_at").
+			Default(time.Now).
+			Comment("last update time of notification"),
 
 		field.Time("planned_at").
 			Default(time.Now).
 			Comment("time for start sending this notification"),
 
-		field.Time("retry_at").
-			Optional().
-			Nillable().
-			Comment("time for new try of sending notification"),
+		field.Int("retries").
+			Default(0).
+			Comment("count of retries to send notification"),
 
 		field.Time("sent_at").
 			Optional().

@@ -43,15 +43,15 @@ func (nu *NotificationUpdate) AddSenderID(i int) *NotificationUpdate {
 }
 
 // SetType sets the "type" field.
-func (nu *NotificationUpdate) SetType(s string) *NotificationUpdate {
-	nu.mutation.SetType(s)
+func (nu *NotificationUpdate) SetType(st schema.NotificationType) *NotificationUpdate {
+	nu.mutation.SetType(st)
 	return nu
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (nu *NotificationUpdate) SetNillableType(s *string) *NotificationUpdate {
-	if s != nil {
-		nu.SetType(*s)
+func (nu *NotificationUpdate) SetNillableType(st *schema.NotificationType) *NotificationUpdate {
+	if st != nil {
+		nu.SetType(*st)
 	}
 	return nu
 }
@@ -76,15 +76,29 @@ func (nu *NotificationUpdate) AddTTL(i int) *NotificationUpdate {
 }
 
 // SetStatus sets the "status" field.
-func (nu *NotificationUpdate) SetStatus(s string) *NotificationUpdate {
-	nu.mutation.SetStatus(s)
+func (nu *NotificationUpdate) SetStatus(ss schema.NotificationStatus) *NotificationUpdate {
+	nu.mutation.SetStatus(ss)
 	return nu
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (nu *NotificationUpdate) SetNillableStatus(s *string) *NotificationUpdate {
-	if s != nil {
-		nu.SetStatus(*s)
+func (nu *NotificationUpdate) SetNillableStatus(ss *schema.NotificationStatus) *NotificationUpdate {
+	if ss != nil {
+		nu.SetStatus(*ss)
+	}
+	return nu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (nu *NotificationUpdate) SetUpdatedAt(t time.Time) *NotificationUpdate {
+	nu.mutation.SetUpdatedAt(t)
+	return nu
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableUpdatedAt(t *time.Time) *NotificationUpdate {
+	if t != nil {
+		nu.SetUpdatedAt(*t)
 	}
 	return nu
 }
@@ -103,23 +117,24 @@ func (nu *NotificationUpdate) SetNillablePlannedAt(t *time.Time) *NotificationUp
 	return nu
 }
 
-// SetRetryAt sets the "retry_at" field.
-func (nu *NotificationUpdate) SetRetryAt(t time.Time) *NotificationUpdate {
-	nu.mutation.SetRetryAt(t)
+// SetRetries sets the "retries" field.
+func (nu *NotificationUpdate) SetRetries(i int) *NotificationUpdate {
+	nu.mutation.ResetRetries()
+	nu.mutation.SetRetries(i)
 	return nu
 }
 
-// SetNillableRetryAt sets the "retry_at" field if the given value is not nil.
-func (nu *NotificationUpdate) SetNillableRetryAt(t *time.Time) *NotificationUpdate {
-	if t != nil {
-		nu.SetRetryAt(*t)
+// SetNillableRetries sets the "retries" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableRetries(i *int) *NotificationUpdate {
+	if i != nil {
+		nu.SetRetries(*i)
 	}
 	return nu
 }
 
-// ClearRetryAt clears the value of the "retry_at" field.
-func (nu *NotificationUpdate) ClearRetryAt() *NotificationUpdate {
-	nu.mutation.ClearRetryAt()
+// AddRetries adds i to the "retries" field.
+func (nu *NotificationUpdate) AddRetries(i int) *NotificationUpdate {
+	nu.mutation.AddRetries(i)
 	return nu
 }
 
@@ -211,12 +226,12 @@ func (nu *NotificationUpdate) ExecX(ctx context.Context) {
 // check runs all checks and user-defined validators on the builder.
 func (nu *NotificationUpdate) check() error {
 	if v, ok := nu.mutation.GetType(); ok {
-		if err := notification.TypeValidator(v); err != nil {
+		if err := notification.TypeValidator(string(v)); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Notification.type": %w`, err)}
 		}
 	}
 	if v, ok := nu.mutation.Status(); ok {
-		if err := notification.StatusValidator(v); err != nil {
+		if err := notification.StatusValidator(string(v)); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Notification.status": %w`, err)}
 		}
 	}
@@ -290,6 +305,13 @@ func (nu *NotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: notification.FieldStatus,
 		})
 	}
+	if value, ok := nu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: notification.FieldUpdatedAt,
+		})
+	}
 	if value, ok := nu.mutation.PlannedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -297,17 +319,18 @@ func (nu *NotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: notification.FieldPlannedAt,
 		})
 	}
-	if value, ok := nu.mutation.RetryAt(); ok {
+	if value, ok := nu.mutation.Retries(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt,
 			Value:  value,
-			Column: notification.FieldRetryAt,
+			Column: notification.FieldRetries,
 		})
 	}
-	if nu.mutation.RetryAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: notification.FieldRetryAt,
+	if value, ok := nu.mutation.AddedRetries(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: notification.FieldRetries,
 		})
 	}
 	if value, ok := nu.mutation.SentAt(); ok {
@@ -356,15 +379,15 @@ func (nuo *NotificationUpdateOne) AddSenderID(i int) *NotificationUpdateOne {
 }
 
 // SetType sets the "type" field.
-func (nuo *NotificationUpdateOne) SetType(s string) *NotificationUpdateOne {
-	nuo.mutation.SetType(s)
+func (nuo *NotificationUpdateOne) SetType(st schema.NotificationType) *NotificationUpdateOne {
+	nuo.mutation.SetType(st)
 	return nuo
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (nuo *NotificationUpdateOne) SetNillableType(s *string) *NotificationUpdateOne {
-	if s != nil {
-		nuo.SetType(*s)
+func (nuo *NotificationUpdateOne) SetNillableType(st *schema.NotificationType) *NotificationUpdateOne {
+	if st != nil {
+		nuo.SetType(*st)
 	}
 	return nuo
 }
@@ -389,15 +412,29 @@ func (nuo *NotificationUpdateOne) AddTTL(i int) *NotificationUpdateOne {
 }
 
 // SetStatus sets the "status" field.
-func (nuo *NotificationUpdateOne) SetStatus(s string) *NotificationUpdateOne {
-	nuo.mutation.SetStatus(s)
+func (nuo *NotificationUpdateOne) SetStatus(ss schema.NotificationStatus) *NotificationUpdateOne {
+	nuo.mutation.SetStatus(ss)
 	return nuo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (nuo *NotificationUpdateOne) SetNillableStatus(s *string) *NotificationUpdateOne {
-	if s != nil {
-		nuo.SetStatus(*s)
+func (nuo *NotificationUpdateOne) SetNillableStatus(ss *schema.NotificationStatus) *NotificationUpdateOne {
+	if ss != nil {
+		nuo.SetStatus(*ss)
+	}
+	return nuo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (nuo *NotificationUpdateOne) SetUpdatedAt(t time.Time) *NotificationUpdateOne {
+	nuo.mutation.SetUpdatedAt(t)
+	return nuo
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableUpdatedAt(t *time.Time) *NotificationUpdateOne {
+	if t != nil {
+		nuo.SetUpdatedAt(*t)
 	}
 	return nuo
 }
@@ -416,23 +453,24 @@ func (nuo *NotificationUpdateOne) SetNillablePlannedAt(t *time.Time) *Notificati
 	return nuo
 }
 
-// SetRetryAt sets the "retry_at" field.
-func (nuo *NotificationUpdateOne) SetRetryAt(t time.Time) *NotificationUpdateOne {
-	nuo.mutation.SetRetryAt(t)
+// SetRetries sets the "retries" field.
+func (nuo *NotificationUpdateOne) SetRetries(i int) *NotificationUpdateOne {
+	nuo.mutation.ResetRetries()
+	nuo.mutation.SetRetries(i)
 	return nuo
 }
 
-// SetNillableRetryAt sets the "retry_at" field if the given value is not nil.
-func (nuo *NotificationUpdateOne) SetNillableRetryAt(t *time.Time) *NotificationUpdateOne {
-	if t != nil {
-		nuo.SetRetryAt(*t)
+// SetNillableRetries sets the "retries" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableRetries(i *int) *NotificationUpdateOne {
+	if i != nil {
+		nuo.SetRetries(*i)
 	}
 	return nuo
 }
 
-// ClearRetryAt clears the value of the "retry_at" field.
-func (nuo *NotificationUpdateOne) ClearRetryAt() *NotificationUpdateOne {
-	nuo.mutation.ClearRetryAt()
+// AddRetries adds i to the "retries" field.
+func (nuo *NotificationUpdateOne) AddRetries(i int) *NotificationUpdateOne {
+	nuo.mutation.AddRetries(i)
 	return nuo
 }
 
@@ -537,12 +575,12 @@ func (nuo *NotificationUpdateOne) ExecX(ctx context.Context) {
 // check runs all checks and user-defined validators on the builder.
 func (nuo *NotificationUpdateOne) check() error {
 	if v, ok := nuo.mutation.GetType(); ok {
-		if err := notification.TypeValidator(v); err != nil {
+		if err := notification.TypeValidator(string(v)); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Notification.type": %w`, err)}
 		}
 	}
 	if v, ok := nuo.mutation.Status(); ok {
-		if err := notification.StatusValidator(v); err != nil {
+		if err := notification.StatusValidator(string(v)); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Notification.status": %w`, err)}
 		}
 	}
@@ -633,6 +671,13 @@ func (nuo *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificat
 			Column: notification.FieldStatus,
 		})
 	}
+	if value, ok := nuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: notification.FieldUpdatedAt,
+		})
+	}
 	if value, ok := nuo.mutation.PlannedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -640,17 +685,18 @@ func (nuo *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificat
 			Column: notification.FieldPlannedAt,
 		})
 	}
-	if value, ok := nuo.mutation.RetryAt(); ok {
+	if value, ok := nuo.mutation.Retries(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt,
 			Value:  value,
-			Column: notification.FieldRetryAt,
+			Column: notification.FieldRetries,
 		})
 	}
-	if nuo.mutation.RetryAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: notification.FieldRetryAt,
+	if value, ok := nuo.mutation.AddedRetries(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: notification.FieldRetries,
 		})
 	}
 	if value, ok := nuo.mutation.SentAt(); ok {

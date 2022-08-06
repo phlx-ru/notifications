@@ -17,8 +17,9 @@ var (
 		{Name: "ttl", Type: field.TypeInt},
 		{Name: "status", Type: field.TypeString, Default: "draft"},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "planned_at", Type: field.TypeTime},
-		{Name: "retry_at", Type: field.TypeTime, Nullable: true},
+		{Name: "retries", Type: field.TypeInt, Default: 0},
 		{Name: "sent_at", Type: field.TypeTime, Nullable: true},
 	}
 	// NotificationsTable holds the schema information for the "notifications" table.
@@ -40,12 +41,12 @@ var (
 			{
 				Name:    "notification_planned_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[7]},
+				Columns: []*schema.Column{NotificationsColumns[8]},
 			},
 			{
 				Name:    "notification_sent_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[9]},
+				Columns: []*schema.Column{NotificationsColumns[10]},
 			},
 		},
 	}

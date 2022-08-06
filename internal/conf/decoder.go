@@ -9,15 +9,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	envKeywordRegex = `\${((.+?)(:\w+)*?)}`
+)
+
 func EnvDecoder(kv *config.KeyValue, v map[string]any) error {
 	configData := replaceEnv(kv.Value)
 	return yaml.Unmarshal(configData, v)
 }
 
 func replaceEnv(configData []byte) []byte {
-	r, _ := regexp.Compile(`\${((.+?)(:\w+)*?)}`)
-
-	for _, match := range r.FindAllSubmatch(configData, -1) {
+	for _, match := range regexp.MustCompile(envKeywordRegex).FindAllSubmatch(configData, -1) {
 		key := string(match[2])
 		value := os.Getenv(key)
 		if value != "" {

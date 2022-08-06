@@ -14,7 +14,7 @@ data:
   database:
     driver: postgres
     source: host=${POSTGRES_HOST:localhost} port=${POSTGRES_PORT:5432} user=${POSTGRES_USER:postgres} password=${POSTGRES_PASS:postgres} dbname=${POSTGRES_DB:notifications} sslmode=disable
-    migrate: soft
+    migrate: ${DATA_DATABASE_MIGRATE:soft} # (soft|hard|none)
 senders:
   email:
     from: ${SENDERS_EMAIL_FROM} # ex: Jordan Wright <test@gmail.com>

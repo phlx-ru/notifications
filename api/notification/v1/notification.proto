@@ -27,6 +27,13 @@ service Notification {
       body: "*"
     };
   }
+
+  rpc Check (CheckRequest) returns (CheckResponse) {
+    option (google.api.http) = {
+      post: "/check"
+      body: "*"
+    };
+  }
 }
 
 message CreatingTestRequest {
@@ -37,29 +44,35 @@ message CreatingTestReply {
   string result = 1;
 }
 
+enum Type {
+  email = 0;
+  sms = 1;
+  push = 2;
+  whatsapp = 3;
+  telegram = 4;
+}
+
+enum Status {
+  draft = 0;
+  pending = 1;
+  sent = 3;
+  retry = 4;
+  failed = 5;
+}
+
 message SendRequest {
-  enum Type {
-    email = 0;
-    sms = 1;
-    push = 2;
-    whatsapp = 3;
-    telegram = 4;
-  }
-  enum Status {
-    draft = 0;
-    pending = 1;
-    sent = 3;
-    retry = 4;
-    failed = 5;
-  }
   Type type = 1;
   map<string, string> payload = 2;
   uint64 ttl = 3;
   Status status = 4;
   google.protobuf.Timestamp plannedAt = 5;
+  int64 senderId = 6;
 }
 
-message SendResponse {}
+message SendResponse {
+  int64 id = 1;
+  bool sent = 2;
+}
 
 message EnqueueResponse {
   int64 id = 1;
@@ -70,4 +83,12 @@ message PayloadEmail {
   string subject = 2;
   string body = 3;
   bool html = 4;
+}
+
+message CheckRequest {
+  int64 id = 1; // Notification ID
+}
+
+message CheckResponse {
+  Status status = 1; /* Status of Notification */
 }

@@ -41,6 +41,11 @@ wire:
 ent:
 	@go run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema
 
+.PHONY: lint
+# Run linter fo Golang files
+lint:
+	@docker run --rm -v $$(pwd):/app -w /app golangci/golangci-lint:latest golangci-lint run
+
 .PHONY: update
 # Update service in Docker Swarm without downtime
 update:

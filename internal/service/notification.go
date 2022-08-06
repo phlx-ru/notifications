@@ -34,20 +34,25 @@ func NewNotificationService(u *biz.NotificationUsecase, s *senders.Senders, l lo
 	}
 }
 
+// CreatingTest TODO REMOVE
 func (s *NotificationService) CreatingTest(ctx context.Context, req *v1.CreatingTestRequest) (
 	*v1.CreatingTestReply,
 	error,
 ) {
+	code := func() string {
+		rand.Seed(time.Now().Unix())
+		return fmt.Sprintf("%d", rand.Int()*10000%10000) //nolint
+	}
 	n := &ent.Notification{
 		SenderID: 0,
-		Type:     schema.TypeEmail.String(),
+		Type:     schema.TypeEmail,
 		Payload: (&schema.PayloadEmail{
 			To:      `phlx@ya.ru`,
 			Subject: `Test email notification`,
 			Body:    fmt.Sprintf(`%s — your personal auth code, keep it simple. Message: %s`, code(), req.Message),
 		}).MustToPayload(),
 		TTL:       300,
-		Status:    schema.StatusDraft.String(),
+		Status:    schema.StatusDraft,
 		PlannedAt: time.Now(),
 	}
 
@@ -68,22 +73,19 @@ func (s *NotificationService) Send(ctx context.Context, req *v1.SendRequest) (*v
 		return nil, err
 	}
 
-	id, err := s.process(
-		ctx,
-		&processData{
-			sendType: req.Type,
-			senderID: 0, // TODO
-			payload:  payload,
-			ttl:      int(req.Ttl),
-		},
-	)
+	in := &biz.NotificationInDTO{
+		SendType: req.Type,
+		SenderID: 0, // TODO
+		Payload:  payload,
+		TTL:      int(req.Ttl),
+	}
 
-	s.logger.Infof("notification was sent and has id %d", id)
+	if err := s.usecase.SendNotification(ctx, in); err != nil {
+		s.logger.Errorf("notification was failed to send: %v", err)
+		return nil, err
+	}
+
+	s.logger.Infof("notification was sent successfully")
 
 	return &v1.SendResponse{}, nil
-}
-
-func code() string {
-	rand.Seed(time.Now().Unix())
-	return fmt.Sprintf("%d", rand.Int()*10000%10000)
 }

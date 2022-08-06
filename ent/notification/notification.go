@@ -3,6 +3,7 @@
 package notification
 
 import (
+	"notifications/ent/schema"
 	"time"
 )
 
@@ -23,10 +24,12 @@ const (
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// FieldPlannedAt holds the string denoting the planned_at field in the database.
 	FieldPlannedAt = "planned_at"
-	// FieldRetryAt holds the string denoting the retry_at field in the database.
-	FieldRetryAt = "retry_at"
+	// FieldRetries holds the string denoting the retries field in the database.
+	FieldRetries = "retries"
 	// FieldSentAt holds the string denoting the sent_at field in the database.
 	FieldSentAt = "sent_at"
 	// Table holds the table name of the notification in the database.
@@ -42,8 +45,9 @@ var Columns = []string{
 	FieldTTL,
 	FieldStatus,
 	FieldCreatedAt,
+	FieldUpdatedAt,
 	FieldPlannedAt,
-	FieldRetryAt,
+	FieldRetries,
 	FieldSentAt,
 }
 
@@ -59,15 +63,19 @@ func ValidColumn(column string) bool {
 
 var (
 	// DefaultType holds the default value on creation for the "type" field.
-	DefaultType string
+	DefaultType schema.NotificationType
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
+	DefaultStatus schema.NotificationStatus
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	StatusValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
 	// DefaultPlannedAt holds the default value on creation for the "planned_at" field.
 	DefaultPlannedAt func() time.Time
+	// DefaultRetries holds the default value on creation for the "retries" field.
+	DefaultRetries int
 )

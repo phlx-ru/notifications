@@ -17,21 +17,29 @@ func init() {
 	// notificationDescType is the schema descriptor for type field.
 	notificationDescType := notificationFields[1].Descriptor()
 	// notification.DefaultType holds the default value on creation for the type field.
-	notification.DefaultType = notificationDescType.Default.(string)
+	notification.DefaultType = schema.NotificationType(notificationDescType.Default.(string))
 	// notification.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	notification.TypeValidator = notificationDescType.Validators[0].(func(string) error)
 	// notificationDescStatus is the schema descriptor for status field.
 	notificationDescStatus := notificationFields[4].Descriptor()
 	// notification.DefaultStatus holds the default value on creation for the status field.
-	notification.DefaultStatus = notificationDescStatus.Default.(string)
+	notification.DefaultStatus = schema.NotificationStatus(notificationDescStatus.Default.(string))
 	// notification.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	notification.StatusValidator = notificationDescStatus.Validators[0].(func(string) error)
 	// notificationDescCreatedAt is the schema descriptor for created_at field.
 	notificationDescCreatedAt := notificationFields[5].Descriptor()
 	// notification.DefaultCreatedAt holds the default value on creation for the created_at field.
 	notification.DefaultCreatedAt = notificationDescCreatedAt.Default.(func() time.Time)
+	// notificationDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationDescUpdatedAt := notificationFields[6].Descriptor()
+	// notification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notification.DefaultUpdatedAt = notificationDescUpdatedAt.Default.(func() time.Time)
 	// notificationDescPlannedAt is the schema descriptor for planned_at field.
-	notificationDescPlannedAt := notificationFields[6].Descriptor()
+	notificationDescPlannedAt := notificationFields[7].Descriptor()
 	// notification.DefaultPlannedAt holds the default value on creation for the planned_at field.
 	notification.DefaultPlannedAt = notificationDescPlannedAt.Default.(func() time.Time)
+	// notificationDescRetries is the schema descriptor for retries field.
+	notificationDescRetries := notificationFields[8].Descriptor()
+	// notification.DefaultRetries holds the default value on creation for the retries field.
+	notification.DefaultRetries = notificationDescRetries.Default.(int)
 }
