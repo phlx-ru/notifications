@@ -7,7 +7,7 @@ import (
 )
 
 type PlainSender interface {
-	Send(message string)
+	Send(message string) error
 }
 
 type LogWriter interface {
@@ -33,6 +33,7 @@ func NewPlain(file *os.File) *Plain {
 	return &Plain{writer: logs}
 }
 
-func (p *Plain) Send(message string) {
+func (p *Plain) Send(message string) error {
 	p.writer.Infof(`received message [%s]`, message)
+	return nil
 }

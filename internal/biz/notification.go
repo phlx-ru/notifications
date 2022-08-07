@@ -228,6 +228,5 @@ func (uc *NotificationUsecase) ProcessPlainNotification(_ context.Context, paylo
 	if err := payloadPlain.Validate(); err != nil {
 		return err
 	}
-	uc.senders.PlainSender.Send(payloadPlain.Message)
-	return nil
+	return uc.senders.PlainSender.Send(payloadPlain.Message)
 }

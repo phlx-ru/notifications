@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"math/rand"
 	"testing"
 	"time"
@@ -110,12 +111,69 @@ func TestWorker_Run(t *testing.T) {
 						func(_ context.Context, _ int) ([]*ent.Notification, error) {
 							return makePlainNotifications(10, "test message")
 						},
-					).Times(10)
+					).
+					Times(10)
 				return notificationRepoMock
 			},
 			plainSender: func() PlainSender {
 				plainSender := NewMockPlainSender(ctrl)
 				plainSender.EXPECT().Send(gomock.Any()).Times(100)
+				return plainSender
+			},
+			emailSender: func() EmailSender {
+				emailSender := NewMockEmailSender(ctrl)
+				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				return emailSender
+			},
+		},
+		{
+			name: "retries",
+			notificationRepo: func() NotificationRepo {
+				notificationRepoMock := NewMockNotificationRepo(ctrl)
+				notificationRepoMock.EXPECT().
+					CountWaitingNotifications(gomock.Any()).
+					Return(10, nil).
+					Times(1)
+
+				notificationRepoMock.EXPECT().
+					Transaction(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(transaction).
+					Times(1)
+
+				notificationRepoMock.EXPECT().
+					Update(gomock.Any(), gomock.Any()).
+					DoAndReturn(
+						func(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
+							require.Equal(t, 1, n.Retries)
+							require.Equal(t, schema.StatusRetry, n.Status)
+
+							plannedAtDuration := n.PlannedAt.Sub(time.Now())
+							// Milliseconds subtract because of parallel run of tests
+							moreThanRetryInterval := plannedAtDuration > biz.RetryInterval-50*time.Millisecond
+							lessThanRetryIntervalWithFewSeconds := plannedAtDuration < biz.RetryInterval+3*time.Second
+							isBetween := moreThanRetryInterval && lessThanRetryIntervalWithFewSeconds
+
+							require.True(t, isBetween)
+
+							return n, nil
+						},
+					).
+					Times(10)
+
+				notificationRepoMock.EXPECT().
+					ListWaitingNotificationsWithLock(gomock.Any(), gomock.Any()).
+					DoAndReturn(
+						func(_ context.Context, _ int) ([]*ent.Notification, error) {
+							return makePlainNotifications(10, "test message")
+						},
+					).
+					Times(1)
+				return notificationRepoMock
+			},
+			plainSender: func() PlainSender {
+				plainSender := NewMockPlainSender(ctrl)
+				plainSender.EXPECT().Send(gomock.Any()).Return(errors.New("test for failed send")).Times(10)
 				return plainSender
 			},
 			emailSender: func() EmailSender {

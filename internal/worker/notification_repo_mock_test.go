@@ -205,9 +205,11 @@ func (m *MockPlainSender) EXPECT() *MockPlainSenderMockRecorder {
 }
 
 // Send mocks base method.
-func (m *MockPlainSender) Send(message string) {
+func (m *MockPlainSender) Send(message string) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Send", message)
+	ret := m.ctrl.Call(m, "Send", message)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Send indicates an expected call of Send.
