@@ -8,8 +8,6 @@ run:
   skip-dirs:
     - bin
     - vendor
-    - var
-    - tmp
   skip-files:
     - ".*_test.go$"
 
@@ -56,12 +54,10 @@ linters:
     - deadcode
     - nakedret
     - staticcheck
-    # - wsl
 
 issues:
   exclude-use-default: false
   exclude:
-    # _ instead of err checks
     - G104
     - exported func .* returns unexported type .*, which can be annoying to use
     - should have a package comment, unless it's in another file for this package

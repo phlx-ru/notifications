@@ -6,27 +6,28 @@ import (
 	"flag"
 	"os"
 	"path"
+	"syscall"
 	"time"
 
-	"github.com/go-kratos/kratos/v2"
+	"notifications/internal/biz"
+	"notifications/internal/conf"
+	"notifications/internal/senders"
+	"notifications/internal/utils"
+	"notifications/internal/worker"
+
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
-	"github.com/go-kratos/kratos/v2/transport/grpc"
-	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/joho/godotenv"
+	"github.com/vrecan/death/v3"
 	"gopkg.in/alexcesaro/statsd.v2"
-
-	"notifications/internal/conf"
-	"notifications/internal/data"
-	"notifications/internal/senders"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name = `notifications`
+	Name = `notifications_worker`
 	// Version is the version of the compiled software.
 	Version = `0.0.1`
 	// flagconf is the config flag.
@@ -42,18 +43,8 @@ func init() {
 	flag.StringVar(&dotenv, "dotenv", ".env", ".env file, eg: -dotenv .env.local")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
-	return kratos.New(
-		kratos.ID(id),
-		kratos.Name(Name),
-		kratos.Version(Version),
-		kratos.Metadata(map[string]string{}),
-		kratos.Logger(logger),
-		kratos.Server(
-			gs,
-			hs,
-		),
-	)
+func newWorker(u *biz.NotificationUsecase, l log.Logger) *worker.Worker {
+	return worker.New(u, l)
 }
 
 func main() {
@@ -67,6 +58,12 @@ func run() error {
 
 	var err error
 
+	dead := death.NewDeath(syscall.SIGINT, os.Interrupt, syscall.SIGTERM)
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go func() {
+		dead.WaitForDeathWithFunc(cancelFunc)
+	}()
+
 	envPath := path.Join(flagconf, dotenv)
 	err = godotenv.Overload(envPath)
 	if err != nil {
@@ -79,7 +76,9 @@ func run() error {
 		),
 		config.WithDecoder(conf.EnvDecoder),
 	)
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 
 	if err = c.Load(); err != nil {
 		return err
@@ -102,9 +101,8 @@ func run() error {
 	)
 	logLevel := log.ParseLevel(bc.Log.Level)
 	logger := log.NewFilter(loggerInstance, log.FilterLevel(logLevel))
+	log.SetLogger(logger)
 	logs := log.NewHelper(logger)
-
-	logs.Info("app started")
 
 	metrics, err := statsd.New(
 		statsd.Address(bc.Metrics.Address),
@@ -130,17 +128,6 @@ func run() error {
 	defer metrics.Close()
 	metrics.Increment("starts.count")
 
-	database, cleanup, err := wireData(bc.Data, logger)
-	if err != nil {
-		return err
-	}
-	defer cleanup()
-
-	err = data.Prepare(context.Background(), database, bc.Data.Database.Migrate)
-	if err != nil {
-		return err
-	}
-
 	es := bc.Senders.GetEmail()
 
 	emailSender, err := senders.NewEmail(es.GetFrom(), es.GetAddress(), es.GetUsername(), es.GetPassword())
@@ -148,19 +135,29 @@ func run() error {
 		return err
 	}
 
-	sendersSet := senders.NewSenders(emailSender)
-
-	app, err := wireApp(database, bc.Server, sendersSet, logger)
+	plainFilePath := bc.Senders.Plain.GetFile()
+	plainFile, err := senders.FromPath(plainFilePath)
 	if err != nil {
 		return err
 	}
+	plainSender := senders.NewPlain(plainFile)
 
-	// start and wait for stop signal
-	if err = app.Run(); err != nil {
-		return err
+	sendersSet := senders.NewSenders(plainSender, emailSender)
+
+	wrkr, cleanup, err := wireWorker(bc.Data, sendersSet, logger)
+	if err != nil {
+		log.Errorf("failed to wire worker: %v", err)
+		return nil
 	}
+	defer cleanup()
 
-	logs.Info("app terminates")
+	logs.Info("worker start")
+	err = wrkr.Run(ctx)
+	if err != nil && err != utils.ErrTermSig && err != context.Canceled {
+		logs.Fatalf("worker failed: %v", err)
+
+	}
+	logs.Info("worker ends successfully")
 
 	return nil
 }

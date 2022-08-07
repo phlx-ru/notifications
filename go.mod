@@ -6,11 +6,13 @@ require (
 	entgo.io/ent v0.11.1
 	github.com/AlekSi/pointer v1.2.0
 	github.com/go-kratos/kratos/v2 v2.4.0
+	github.com/golang/mock v1.6.0
 	github.com/google/wire v0.5.0
 	github.com/joho/godotenv v1.4.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/lib/pq v1.10.5
 	github.com/stretchr/testify v1.7.1
+	github.com/vrecan/death/v3 v3.0.3
 	google.golang.org/genproto v0.0.0-20220524023933-508584e28198
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0

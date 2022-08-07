@@ -15,7 +15,10 @@ data:
     driver: postgres
     source: host=${POSTGRES_HOST:localhost} port=${POSTGRES_PORT:5432} user=${POSTGRES_USER:postgres} password=${POSTGRES_PASS:postgres} dbname=${POSTGRES_DB:notifications} sslmode=disable
     migrate: ${DATA_DATABASE_MIGRATE:soft} # (soft|hard|none)
+    debug: ${DATA_DATABASE_DEBUG:false}
 senders:
+  plain:
+    file: ${SENDERS_PLAIN_FILE:./messages.log}
   email:
     from: ${SENDERS_EMAIL_FROM} # ex: Jordan Wright <test@gmail.com>
     address: ${SENDERS_EMAIL_ADDRESS} # ex: smtp.gmail.com:587

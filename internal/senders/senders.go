@@ -1,11 +1,13 @@
 package senders
 
 type Senders struct {
-	EmailSender *Email
+	EmailSender EmailSender
+	PlainSender PlainSender
 }
 
-func NewSenders(emailSender *Email) *Senders {
+func NewSenders(plainSender *Plain, emailSender *Email) *Senders {
 	return &Senders{
 		EmailSender: emailSender,
+		PlainSender: plainSender,
 	}
 }

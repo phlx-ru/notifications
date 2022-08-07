@@ -45,11 +45,12 @@ message CreatingTestReply {
 }
 
 enum Type {
-  email = 0;
-  sms = 1;
-  push = 2;
-  whatsapp = 3;
-  telegram = 4;
+  plain = 0;
+  email = 1;
+  sms = 2;
+  push = 3;
+  whatsapp = 4;
+  telegram = 5;
 }
 
 enum Status {

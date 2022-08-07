@@ -1,14 +1,11 @@
 package schema
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
-	"net/mail"
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	kratosErrors "github.com/go-kratos/kratos/v2/errors"
@@ -19,6 +16,7 @@ type NotificationType string
 type NotificationStatus string
 
 const (
+	TypePlain    NotificationType = `plain`
 	TypeEmail    NotificationType = `email`
 	TypeSMS      NotificationType = `sms`
 	TypePush     NotificationType = `push`
@@ -34,6 +32,7 @@ const (
 
 var (
 	Types = []NotificationType{
+		TypePlain,
 		TypeEmail,
 		TypeSMS,
 		TypePush,
@@ -55,62 +54,6 @@ type Notification struct {
 	ent.Schema
 }
 
-type Payload []byte
-
-func (p Payload) String() string {
-	return string(p)
-}
-
-func PayloadFromProto(proto map[string]string) (*Payload, error) {
-	bytes, err := json.Marshal(proto)
-	if err != nil {
-		return nil, err
-	}
-	payload := Payload(bytes)
-	return &payload, nil
-}
-
-func (p Payload) ToPayloadEmail() (*PayloadEmail, error) {
-	var pe PayloadEmail
-	err := json.Unmarshal(p, &pe)
-	if err != nil {
-		return nil, err
-	}
-	return &pe, nil
-}
-
-type PayloadEmail struct {
-	To      string `json:"to"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
-	IsHTML  bool   `json:"is_html"`
-}
-
-func (pe *PayloadEmail) MustToPayload() Payload {
-	bytes, err := json.Marshal(pe)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
-}
-
-func (pe *PayloadEmail) Validate() error {
-	if pe.To == "" {
-		return errors.New(`payload email has empty field 'to'`)
-	}
-	_, err := mail.ParseAddress(pe.To)
-	if err != nil {
-		return fmt.Errorf(`email '%s' is invalid: %w`, pe.To, err)
-	}
-	if pe.Subject == "" {
-		return errors.New(`payload email has empty field 'subject'`)
-	}
-	if pe.Body == "" {
-		return errors.New(`payload email has empty field 'body'`)
-	}
-	return nil
-}
-
 // Fields of the Notification.
 func (Notification) Fields() []ent.Field {
 	return []ent.Field{
@@ -120,7 +63,7 @@ func (Notification) Fields() []ent.Field {
 			Default(TypeEmail.String()).
 			Validate(ValidateType).
 			GoType(NotificationType(``)).
-			Comment("types in (sms|email|whatsapp|push)"),
+			Comment("types in (plain|sms|email|whatsapp|push)"),
 
 		field.JSON("payload", Payload{}).
 			Comment("message payload as map<string, any> variable by type"),
@@ -141,6 +84,12 @@ func (Notification) Fields() []ent.Field {
 
 		field.Time("updated_at").
 			Default(time.Now).
+			UpdateDefault(time.Now).
+			Annotations(
+				&entsql.Annotation{
+					Default: "CURRENT_TIMESTAMP",
+				},
+			).
 			Comment("last update time of notification"),
 
 		field.Time("planned_at").

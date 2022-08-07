@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.4
-// source: api/notification/v1/notification.proto
+// source: notification/v1/notification.proto
 
 package v1
 
@@ -25,6 +25,7 @@ type NotificationClient interface {
 	CreatingTest(ctx context.Context, in *CreatingTestRequest, opts ...grpc.CallOption) (*CreatingTestReply, error)
 	Enqueue(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*EnqueueResponse, error)
 	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendResponse, error)
+	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error)
 }
 
 type notificationClient struct {
@@ -62,6 +63,15 @@ func (c *notificationClient) Send(ctx context.Context, in *SendRequest, opts ...
 	return out, nil
 }
 
+func (c *notificationClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error) {
+	out := new(CheckResponse)
+	err := c.cc.Invoke(ctx, "/notification.v1.Notification/Check", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServer is the server API for Notification service.
 // All implementations must embed UnimplementedNotificationServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type NotificationServer interface {
 	CreatingTest(context.Context, *CreatingTestRequest) (*CreatingTestReply, error)
 	Enqueue(context.Context, *SendRequest) (*EnqueueResponse, error)
 	Send(context.Context, *SendRequest) (*SendResponse, error)
+	Check(context.Context, *CheckRequest) (*CheckResponse, error)
 	mustEmbedUnimplementedNotificationServer()
 }
 
@@ -84,6 +95,9 @@ func (UnimplementedNotificationServer) Enqueue(context.Context, *SendRequest) (*
 }
 func (UnimplementedNotificationServer) Send(context.Context, *SendRequest) (*SendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
+}
+func (UnimplementedNotificationServer) Check(context.Context, *CheckRequest) (*CheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
 func (UnimplementedNotificationServer) mustEmbedUnimplementedNotificationServer() {}
 
@@ -152,6 +166,24 @@ func _Notification_Send_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Notification_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServer).Check(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/notification.v1.Notification/Check",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServer).Check(ctx, req.(*CheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Notification_ServiceDesc is the grpc.ServiceDesc for Notification service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -171,7 +203,11 @@ var Notification_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Send",
 			Handler:    _Notification_Send_Handler,
 		},
+		{
+			MethodName: "Check",
+			Handler:    _Notification_Check_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/notification/v1/notification.proto",
+	Metadata: "notification/v1/notification.proto",
 }

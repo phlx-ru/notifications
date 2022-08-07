@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.4.1
 // - protoc             v3.21.4
-// source: api/notification/v1/notification.proto
+// source: notification/v1/notification.proto
 
 package v1
 
@@ -19,11 +19,13 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationNotificationCheck = "/notification.v1.Notification/Check"
 const OperationNotificationCreatingTest = "/notification.v1.Notification/CreatingTest"
 const OperationNotificationEnqueue = "/notification.v1.Notification/Enqueue"
 const OperationNotificationSend = "/notification.v1.Notification/Send"
 
 type NotificationHTTPServer interface {
+	Check(context.Context, *CheckRequest) (*CheckResponse, error)
 	CreatingTest(context.Context, *CreatingTestRequest) (*CreatingTestReply, error)
 	Enqueue(context.Context, *SendRequest) (*EnqueueResponse, error)
 	Send(context.Context, *SendRequest) (*SendResponse, error)
@@ -34,6 +36,7 @@ func RegisterNotificationHTTPServer(s *http.Server, srv NotificationHTTPServer) 
 	r.GET("/notification", _Notification_CreatingTest0_HTTP_Handler(srv))
 	r.POST("/enqueue", _Notification_Enqueue0_HTTP_Handler(srv))
 	r.POST("/send", _Notification_Send0_HTTP_Handler(srv))
+	r.POST("/check", _Notification_Check0_HTTP_Handler(srv))
 }
 
 func _Notification_CreatingTest0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.Context) error {
@@ -93,7 +96,27 @@ func _Notification_Send0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.
 	}
 }
 
+func _Notification_Check0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CheckRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNotificationCheck)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Check(ctx, req.(*CheckRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CheckResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type NotificationHTTPClient interface {
+	Check(ctx context.Context, req *CheckRequest, opts ...http.CallOption) (rsp *CheckResponse, err error)
 	CreatingTest(ctx context.Context, req *CreatingTestRequest, opts ...http.CallOption) (rsp *CreatingTestReply, err error)
 	Enqueue(ctx context.Context, req *SendRequest, opts ...http.CallOption) (rsp *EnqueueResponse, err error)
 	Send(ctx context.Context, req *SendRequest, opts ...http.CallOption) (rsp *SendResponse, err error)
@@ -105,6 +128,19 @@ type NotificationHTTPClientImpl struct {
 
 func NewNotificationHTTPClient(client *http.Client) NotificationHTTPClient {
 	return &NotificationHTTPClientImpl{client}
+}
+
+func (c *NotificationHTTPClientImpl) Check(ctx context.Context, in *CheckRequest, opts ...http.CallOption) (*CheckResponse, error) {
+	var out CheckResponse
+	pattern := "/check"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationNotificationCheck))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
 }
 
 func (c *NotificationHTTPClientImpl) CreatingTest(ctx context.Context, in *CreatingTestRequest, opts ...http.CallOption) (*CreatingTestReply, error) {

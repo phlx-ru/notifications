@@ -8,7 +8,7 @@ import (
 
 func transformNotificationModelToInDTO(notification *ent.Notification) *NotificationInDTO {
 	return &NotificationInDTO{
-		SendType: v1.SendRequest_Type(v1.SendRequest_Type_value[notification.Type.String()]),
+		SendType: v1.Type(v1.Type_value[notification.Type.String()]),
 		SenderID: int64(notification.SenderID),
 		Payload:  &notification.Payload,
 		TTL:      notification.TTL,

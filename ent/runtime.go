@@ -34,6 +34,8 @@ func init() {
 	notificationDescUpdatedAt := notificationFields[6].Descriptor()
 	// notification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	notification.DefaultUpdatedAt = notificationDescUpdatedAt.Default.(func() time.Time)
+	// notification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notification.UpdateDefaultUpdatedAt = notificationDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// notificationDescPlannedAt is the schema descriptor for planned_at field.
 	notificationDescPlannedAt := notificationFields[7].Descriptor()
 	// notification.DefaultPlannedAt holds the default value on creation for the planned_at field.

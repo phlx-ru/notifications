@@ -26,7 +26,7 @@ func Test_transformNotificationInDTOToModel(t *testing.T) {
 		{
 			name: "basic",
 			dto: &NotificationInDTO{
-				SendType: v1.SendRequest_Type(v1.SendRequest_Type_value[schema.TypeEmail.String()]),
+				SendType: v1.Type(v1.Type_value[schema.TypeEmail.String()]),
 				Payload:  &payload,
 			},
 			withField: func(notification *ent.Notification) {

@@ -3,9 +3,27 @@
 
 openapi: 3.0.3
 info:
-    title: Notification API
+    title: ""
     version: 0.0.1
 paths:
+    /check:
+        post:
+            tags:
+                - Notification
+            operationId: Notification_Check
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/notification.v1.CheckRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/notification.v1.CheckResponse'
     /enqueue:
         post:
             tags:
@@ -15,7 +33,7 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/SendRequest'
+                            $ref: '#/components/schemas/notification.v1.SendRequest'
                 required: true
             responses:
                 "200":
@@ -23,13 +41,26 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/EnqueueResponse'
-                default:
-                    description: Default error response
+                                $ref: '#/components/schemas/notification.v1.EnqueueResponse'
+    /helloworld/{name}:
+        get:
+            tags:
+                - Greeter
+            description: Sends a greeting
+            operationId: Greeter_SayHello
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/Status'
+                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
     /notification:
         get:
             tags:
@@ -46,13 +77,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/CreatingTestReply'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
+                                $ref: '#/components/schemas/notification.v1.CreatingTestReply'
     /send:
         post:
             tags:
@@ -62,7 +87,7 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/SendRequest'
+                            $ref: '#/components/schemas/notification.v1.SendRequest'
                 required: true
             responses:
                 "200":
@@ -70,35 +95,39 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/SendResponse'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
+                                $ref: '#/components/schemas/notification.v1.SendResponse'
 components:
     schemas:
-        CreatingTestReply:
+        helloworld.v1.HelloReply:
             type: object
             properties:
-                result:
+                message:
                     type: string
-        EnqueueResponse:
+            description: The response message containing the greetings
+        notification.v1.CheckRequest:
             type: object
             properties:
                 id:
                     type: integer
                     format: int64
-        GoogleProtobufAny:
+        notification.v1.CheckResponse:
             type: object
             properties:
-                '@type':
+                status:
+                    type: integer
+                    format: enum
+        notification.v1.CreatingTestReply:
+            type: object
+            properties:
+                result:
                     type: string
-                    description: The type of the serialized message.
-            additionalProperties: true
-            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
-        SendRequest:
+        notification.v1.EnqueueResponse:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+        notification.v1.SendRequest:
             type: object
             properties:
                 type:
@@ -117,24 +146,18 @@ components:
                 plannedAt:
                     type: string
                     format: date-time
-        SendResponse:
-            type: object
-            properties: {}
-        Status:
+                senderId:
+                    type: integer
+                    format: int64
+        notification.v1.SendResponse:
             type: object
             properties:
-                code:
+                id:
                     type: integer
-                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
-                    format: int32
-                message:
-                    type: string
-                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
-                details:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/GoogleProtobufAny'
-                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
-            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+                    format: int64
+                sent:
+                    type: boolean
 tags:
+    - name: Greeter
+      description: The greeting service definition.
     - name: Notification

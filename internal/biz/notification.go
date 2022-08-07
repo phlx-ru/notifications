@@ -38,6 +38,8 @@ type NotificationRepo interface {
 		txOptions *databaseSql.TxOptions,
 		actions ...func(repoCtx context.Context) error,
 	) error
+
+	CountWaitingNotifications(ctx context.Context) (int, error)
 }
 
 // NotificationUsecase is a Greeter usecase.
@@ -48,7 +50,7 @@ type NotificationUsecase struct {
 }
 
 type NotificationInDTO struct { // TODO REVIEW FOR DEPENDENCIES
-	SendType v1.SendRequest_Type
+	SendType v1.Type
 	SenderID int64
 	Payload  *schema.Payload
 	TTL      int
@@ -75,8 +77,14 @@ func (uc *NotificationUsecase) CreateNotification(ctx context.Context, n *ent.No
 	return uc.repo.Save(ctx, n)
 }
 
+func (uc *NotificationUsecase) CountOfWaitingForProcessNotifications(ctx context.Context) (int, error) {
+	return uc.repo.CountWaitingNotifications(ctx)
+}
+
 // ProcessNotifications concurrency-safe notification processing
-func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit int) error {
+func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit int) (int64, int64, error) {
+	found := int64(0)
+	processed := int64(0)
 	transactionOptions := &databaseSql.TxOptions{
 		Isolation: databaseSql.LevelReadCommitted,
 		ReadOnly:  false,
@@ -87,6 +95,7 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 		if err != nil {
 			return err
 		}
+		found = int64(len(list))
 
 		for _, notification := range list {
 			dto := transformNotificationModelToInDTO(notification)
@@ -94,6 +103,7 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 			if err == nil {
 				notification.Status = schema.StatusSent
 				notification.SentAt = pointer.ToTime(time.Now())
+				processed++
 			} else {
 				uc.log.Warnf(`unsuccessful attempt to send notification with id %d: %v`, notification.ID, err)
 				live := notification.PlannedAt.Sub(notification.CreatedAt)
@@ -108,6 +118,7 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 				}
 			}
 			if _, err = uc.repo.Update(repoCtx, notification); err != nil {
+				processed = 0
 				return err
 			}
 		}
@@ -117,12 +128,13 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 		return nil
 	}
 
-	return uc.repo.Transaction(ctx, transactionOptions, transaction)
+	return found, processed, uc.repo.Transaction(ctx, transactionOptions, transaction)
 }
 
 func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *NotificationInDTO) error {
-	processors := map[v1.SendRequest_Type]NotificationProcessor{
-		v1.SendRequest_email: uc.ProcessEmailNotification,
+	processors := map[v1.Type]NotificationProcessor{
+		v1.Type_plain: uc.ProcessPlainNotification,
+		v1.Type_email: uc.ProcessEmailNotification,
 	}
 
 	processor, ok := processors[dto.SendType]
@@ -206,4 +218,16 @@ func (uc *NotificationUsecase) ProcessEmailNotification(_ context.Context, paylo
 		send = uc.senders.EmailSender.SendHTML
 	}
 	return send([]string{payloadEmail.To}, payloadEmail.Subject, payloadEmail.Body)
+}
+
+func (uc *NotificationUsecase) ProcessPlainNotification(_ context.Context, payload *schema.Payload) error {
+	payloadPlain, err := payload.ToPayloadPlain()
+	if err != nil {
+		return err
+	}
+	if err := payloadPlain.Validate(); err != nil {
+		return err
+	}
+	uc.senders.PlainSender.Send(payloadPlain.Message)
+	return nil
 }

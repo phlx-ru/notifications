@@ -26,7 +26,7 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name = `notifications`
+	Name = `notifications_server`
 	// Version is the version of the compiled software.
 	Version = `0.0.1`
 	// flagconf is the config flag.
@@ -142,13 +142,19 @@ func run() error {
 	}
 
 	es := bc.Senders.GetEmail()
-
 	emailSender, err := senders.NewEmail(es.GetFrom(), es.GetAddress(), es.GetUsername(), es.GetPassword())
 	if err != nil {
 		return err
 	}
 
-	sendersSet := senders.NewSenders(emailSender)
+	plainFilePath := bc.Senders.Plain.GetFile()
+	plainFile, err := senders.FromPath(plainFilePath)
+	if err != nil {
+		return err
+	}
+	plainSender := senders.NewPlain(plainFile)
+
+	sendersSet := senders.NewSenders(plainSender, emailSender)
 
 	app, err := wireApp(database, bc.Server, sendersSet, logger)
 	if err != nil {

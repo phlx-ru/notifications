@@ -5,16 +5,22 @@ CONFIG_SWARM      := docker-compose.swarm.yml
 REGISTRY_HOST     := registry.services.phlx.ru
 CLUSTER           := swarm
 DOTENV            := .env
+SERVICES          := ${SERVICE_NAME}_server ${SERVICE_NAME}_worker
 
-.PHONY: go-env
-# Add Go binaries to PATH making it accessible after `go install ...`
-go-env:
-	@export PATH="$PATH:$(go env GOPATH)/bin"
+.PHONY: path
+# Show command how add Go binaries to PATH making it accessible after `go install ...`
+path:
+	@echo 'export PATH="$$PATH:$$(go env GOPATH)/bin"'
 
-.PHONY: run
-# Run the service
-run:
-	@go run ./cmd/server -conf=./configs
+.PHONY: run-server
+# Run cmd/server
+run-server:
+	@go run cmd/server/wire_gen.go cmd/server/main.go -conf=./configs -dotenv=.env.local
+
+.PHONY: run-worker
+# Run cmd/worker
+run-worker:
+	@go run cmd/worker/wire_gen.go cmd/worker/main.go -conf=./configs -dotenv=.env.local
 
 .PHONY: vendor
 # Make ./vendor folder with dependencies
@@ -29,7 +35,7 @@ gen:
 .PHONY: test
 # Makes go test ./...
 test:
-	@go test ./...
+	@go test -race -parallel 10 ./...
 
 .PHNOY: wire
 # Wire dependencies with google/wire
@@ -74,7 +80,7 @@ undeploy:
 .PHONY: push
 # Build and push image to registry
 push:
-	@docker build -t ${REGISTRY_HOST}/${SERVICE_NAME}:latest ${CURRENT_DIRECTORY}/. \
+	@docker build -t ${REGISTRY_HOST}/${SERVICE_NAME}:latest -f ${CURRENT_DIRECTORY}/Dockerfile ${CURRENT_DIRECTORY}/. \
 		&& docker push ${REGISTRY_HOST}/${SERVICE_NAME}:latest
 
 .PHONY: push
@@ -91,3 +97,9 @@ env:
 # Display Docker Swarm container logs
 logs:
 	@docker logs "$$(docker ps -q -f name=${CLUSTER}_${SERVICE_NAME})"
+
+blob:
+	@set -e; for service in ${SERVICES}; \
+		do docker build -t ${REGISTRY_HOST}/${service}:latest -f ${CURRENT_DIRECTORY}/Dockerfile-${service} \
+			${CURRENT_DIRECTORY}/. && docker push ${REGISTRY_HOST}/${service}:latest
+	done

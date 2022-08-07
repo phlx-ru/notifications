@@ -95,14 +95,6 @@ func (nu *NotificationUpdate) SetUpdatedAt(t time.Time) *NotificationUpdate {
 	return nu
 }
 
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (nu *NotificationUpdate) SetNillableUpdatedAt(t *time.Time) *NotificationUpdate {
-	if t != nil {
-		nu.SetUpdatedAt(*t)
-	}
-	return nu
-}
-
 // SetPlannedAt sets the "planned_at" field.
 func (nu *NotificationUpdate) SetPlannedAt(t time.Time) *NotificationUpdate {
 	nu.mutation.SetPlannedAt(t)
@@ -169,6 +161,7 @@ func (nu *NotificationUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	nu.defaults()
 	if len(nu.hooks) == 0 {
 		if err = nu.check(); err != nil {
 			return 0, err
@@ -220,6 +213,14 @@ func (nu *NotificationUpdate) Exec(ctx context.Context) error {
 func (nu *NotificationUpdate) ExecX(ctx context.Context) {
 	if err := nu.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (nu *NotificationUpdate) defaults() {
+	if _, ok := nu.mutation.UpdatedAt(); !ok {
+		v := notification.UpdateDefaultUpdatedAt()
+		nu.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -431,14 +432,6 @@ func (nuo *NotificationUpdateOne) SetUpdatedAt(t time.Time) *NotificationUpdateO
 	return nuo
 }
 
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (nuo *NotificationUpdateOne) SetNillableUpdatedAt(t *time.Time) *NotificationUpdateOne {
-	if t != nil {
-		nuo.SetUpdatedAt(*t)
-	}
-	return nuo
-}
-
 // SetPlannedAt sets the "planned_at" field.
 func (nuo *NotificationUpdateOne) SetPlannedAt(t time.Time) *NotificationUpdateOne {
 	nuo.mutation.SetPlannedAt(t)
@@ -512,6 +505,7 @@ func (nuo *NotificationUpdateOne) Save(ctx context.Context) (*Notification, erro
 		err  error
 		node *Notification
 	)
+	nuo.defaults()
 	if len(nuo.hooks) == 0 {
 		if err = nuo.check(); err != nil {
 			return nil, err
@@ -569,6 +563,14 @@ func (nuo *NotificationUpdateOne) Exec(ctx context.Context) error {
 func (nuo *NotificationUpdateOne) ExecX(ctx context.Context) {
 	if err := nuo.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (nuo *NotificationUpdateOne) defaults() {
+	if _, ok := nuo.mutation.UpdatedAt(); !ok {
+		v := notification.UpdateDefaultUpdatedAt()
+		nuo.mutation.SetUpdatedAt(v)
 	}
 }
 

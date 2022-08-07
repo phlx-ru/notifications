@@ -47,16 +47,21 @@ message Data {
     string driver = 1;
     string source = 2;
     Migrate migrate = 3;
+    bool debug = 4;
   }
   Database database = 1;
 }
 
 message Senders {
+  message Plain {
+    string file = 1;
+  }
   message Email {
     string from = 1;
     string address = 2;
     string username = 3;
     string password = 4;
   }
-  Email email = 1;
+  Plain plain = 1;
+  Email email = 2;
 }

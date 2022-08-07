@@ -8,6 +8,11 @@ import (
 	"github.com/jordan-wright/email"
 )
 
+type EmailSender interface {
+	SendText(to []string, subject, body string) error
+	SendHTML(to []string, subject, body string) error
+}
+
 type Email struct {
 	From              string
 	RelayAddress      string

@@ -17,7 +17,7 @@ var (
 		{Name: "ttl", Type: field.TypeInt},
 		{Name: "status", Type: field.TypeString, Default: "draft"},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime, Default: "CURRENT_TIMESTAMP"},
 		{Name: "planned_at", Type: field.TypeTime},
 		{Name: "retries", Type: field.TypeInt, Default: 0},
 		{Name: "sent_at", Type: field.TypeTime, Nullable: true},

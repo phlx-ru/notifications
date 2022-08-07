@@ -64,7 +64,30 @@ func (s *NotificationService) CreatingTest(ctx context.Context, req *v1.Creating
 }
 
 func (s *NotificationService) Enqueue(ctx context.Context, req *v1.SendRequest) (*v1.EnqueueResponse, error) {
-	return nil, nil
+	payload, err := schema.PayloadFromProto(req.Payload)
+	if err != nil {
+		return nil, err
+	}
+
+	in := &biz.NotificationInDTO{
+		SendType: req.Type,
+		SenderID: req.SenderId,
+		Payload:  payload,
+		TTL:      int(req.Ttl),
+	}
+
+	response := &v1.EnqueueResponse{}
+	result, err := s.usecase.EnqueueNotification(ctx, in)
+	if result != nil {
+		response.Id = result.ID
+	}
+	if err == nil {
+		s.logger.Infof("notification %d was sent successfully", response.Id)
+	} else {
+		s.logger.Errorf("notification %d was failed to send: %v", response.Id, err)
+	}
+
+	return response, err
 }
 
 func (s *NotificationService) Send(ctx context.Context, req *v1.SendRequest) (*v1.SendResponse, error) {
@@ -75,17 +98,22 @@ func (s *NotificationService) Send(ctx context.Context, req *v1.SendRequest) (*v
 
 	in := &biz.NotificationInDTO{
 		SendType: req.Type,
-		SenderID: 0, // TODO
+		SenderID: req.SenderId,
 		Payload:  payload,
 		TTL:      int(req.Ttl),
 	}
 
-	if err := s.usecase.SendNotification(ctx, in); err != nil {
-		s.logger.Errorf("notification was failed to send: %v", err)
-		return nil, err
+	response := &v1.SendResponse{}
+	result, err := s.usecase.SendNotificationAndSaveToRepo(ctx, in)
+	if result != nil {
+		response.Id = result.ID
+		response.Sent = result.Sent
+	}
+	if err == nil {
+		s.logger.Infof("notification %d was sent successfully", response.Id)
+	} else {
+		s.logger.Errorf("notification %d was failed to send: %v", response.Id, err)
 	}
 
-	s.logger.Infof("notification was sent successfully")
-
-	return &v1.SendResponse{}, nil
+	return response, err
 }

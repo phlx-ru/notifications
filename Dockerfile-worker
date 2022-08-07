@@ -1,0 +1,16 @@
+FROM golang:1.18 AS builder
+
+COPY . /src
+WORKDIR /src
+
+RUN make build
+
+FROM alpine:latest
+
+COPY --from=builder /src/bin /app
+
+WORKDIR /app
+
+VOLUME /data/conf
+
+CMD ["./worker", "-conf", "/data/conf"]

@@ -28,9 +28,15 @@ type Data struct {
 func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	logHelper := log.NewHelper(log.With(logger, "module", "ent/data/logger-job"))
 
+	options := []ent.Option{}
+	if c.Database.Debug {
+		options = append(options, ent.Debug())
+	}
+
 	client, err := ent.Open(
 		c.Database.Driver,
 		c.Database.Source,
+		options...
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed opening connection to db: %v", err)
