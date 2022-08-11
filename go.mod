@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.10.5
 	github.com/stretchr/testify v1.7.1
 	github.com/vrecan/death/v3 v3.0.3
-	google.golang.org/genproto v0.0.0-20220524023933-508584e28198
+	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0

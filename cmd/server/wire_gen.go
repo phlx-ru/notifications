@@ -7,11 +7,13 @@
 package main
 
 import (
+	"context"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"notifications/internal/biz"
 	"notifications/internal/conf"
 	"notifications/internal/data"
+	"notifications/internal/pkg/metrics"
 	"notifications/internal/senders"
 	"notifications/internal/server"
 	"notifications/internal/service"
@@ -31,15 +33,12 @@ func wireData(confData *conf.Data, logger log.Logger) (*data.Data, func(), error
 }
 
 // wireApp init kratos application.
-func wireApp(dataData *data.Data, confServer *conf.Server, sendersSenders *senders.Senders, logger log.Logger) (*kratos.App, error) {
-	greeterRepo := data.NewGreeterRepo(dataData, logger)
-	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
-	greeterService := service.NewGreeterService(greeterUsecase)
-	notificationRepo := data.NewNotificationRepo(dataData, logger)
-	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, logger)
+func wireApp(contextContext context.Context, dataData *data.Data, confServer *conf.Server, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*kratos.App, error) {
+	notificationRepo := data.NewNotificationRepo(dataData, logger, metricsMetrics)
+	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, metricsMetrics, logger)
 	notificationService := service.NewNotificationService(notificationUsecase, sendersSenders, logger)
-	grpcServer := server.NewGRPCServer(confServer, greeterService, notificationService, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, notificationService, logger)
-	app := newApp(logger, grpcServer, httpServer)
+	grpcServer := server.NewGRPCServer(confServer, notificationService, metricsMetrics, logger)
+	httpServer := server.NewHTTPServer(confServer, notificationService, metricsMetrics, logger)
+	app := newApp(contextContext, logger, grpcServer, httpServer)
 	return app, nil
 }

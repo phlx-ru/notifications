@@ -109,6 +109,20 @@ func (nc *NotificationCreate) SetNillablePlannedAt(t *time.Time) *NotificationCr
 	return nc
 }
 
+// SetRetryAt sets the "retry_at" field.
+func (nc *NotificationCreate) SetRetryAt(t time.Time) *NotificationCreate {
+	nc.mutation.SetRetryAt(t)
+	return nc
+}
+
+// SetNillableRetryAt sets the "retry_at" field if the given value is not nil.
+func (nc *NotificationCreate) SetNillableRetryAt(t *time.Time) *NotificationCreate {
+	if t != nil {
+		nc.SetRetryAt(*t)
+	}
+	return nc
+}
+
 // SetRetries sets the "retries" field.
 func (nc *NotificationCreate) SetRetries(i int) *NotificationCreate {
 	nc.mutation.SetRetries(i)
@@ -369,6 +383,14 @@ func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 			Column: notification.FieldPlannedAt,
 		})
 		_node.PlannedAt = value
+	}
+	if value, ok := nc.mutation.RetryAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: notification.FieldRetryAt,
+		})
+		_node.RetryAt = &value
 	}
 	if value, ok := nc.mutation.Retries(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

@@ -15,7 +15,7 @@ import (
 func Test_transformNotificationInDTOToModel(t *testing.T) {
 	now := time.Now()
 
-	payload := schema.Payload(`{"test":"test"}`)
+	payload := schema.Payload(map[string]string{`test`: `test`})
 
 	testCases := []struct {
 		name      string

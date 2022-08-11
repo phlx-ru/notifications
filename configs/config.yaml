@@ -20,7 +20,7 @@ senders:
   plain:
     file: ${SENDERS_PLAIN_FILE:./messages.log}
   email:
-    from: ${SENDERS_EMAIL_FROM} # ex: Jordan Wright <test@gmail.com>
-    address: ${SENDERS_EMAIL_ADDRESS} # ex: smtp.gmail.com:587
+    from: ${SENDERS_EMAIL_FROM}
+    address: ${SENDERS_EMAIL_ADDRESS}
     username: ${SENDERS_EMAIL_USERNAME}
     password: ${SENDERS_EMAIL_PASSWORD}

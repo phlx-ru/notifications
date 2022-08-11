@@ -13,6 +13,7 @@ import (
 
 	v1 "notifications/api/notification/v1"
 
+	"github.com/AlekSi/pointer"
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -74,6 +75,10 @@ func (s *NotificationService) Enqueue(ctx context.Context, req *v1.SendRequest) 
 		SenderID: req.SenderId,
 		Payload:  payload,
 		TTL:      int(req.Ttl),
+	}
+
+	if req.PlannedAt != nil {
+		in.PlannedAt = pointer.ToTime(req.PlannedAt.AsTime())
 	}
 
 	response := &v1.EnqueueResponse{}

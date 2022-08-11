@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.4
-// source: notification/v1/notification.proto
+// source: api/notification/v1/notification.proto
 
 package v1
 
@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationClient interface {
-	CreatingTest(ctx context.Context, in *CreatingTestRequest, opts ...grpc.CallOption) (*CreatingTestReply, error)
 	Enqueue(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*EnqueueResponse, error)
 	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendResponse, error)
 	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error)
@@ -34,15 +33,6 @@ type notificationClient struct {
 
 func NewNotificationClient(cc grpc.ClientConnInterface) NotificationClient {
 	return &notificationClient{cc}
-}
-
-func (c *notificationClient) CreatingTest(ctx context.Context, in *CreatingTestRequest, opts ...grpc.CallOption) (*CreatingTestReply, error) {
-	out := new(CreatingTestReply)
-	err := c.cc.Invoke(ctx, "/notification.v1.Notification/CreatingTest", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *notificationClient) Enqueue(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*EnqueueResponse, error) {
@@ -76,7 +66,6 @@ func (c *notificationClient) Check(ctx context.Context, in *CheckRequest, opts .
 // All implementations must embed UnimplementedNotificationServer
 // for forward compatibility
 type NotificationServer interface {
-	CreatingTest(context.Context, *CreatingTestRequest) (*CreatingTestReply, error)
 	Enqueue(context.Context, *SendRequest) (*EnqueueResponse, error)
 	Send(context.Context, *SendRequest) (*SendResponse, error)
 	Check(context.Context, *CheckRequest) (*CheckResponse, error)
@@ -87,9 +76,6 @@ type NotificationServer interface {
 type UnimplementedNotificationServer struct {
 }
 
-func (UnimplementedNotificationServer) CreatingTest(context.Context, *CreatingTestRequest) (*CreatingTestReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreatingTest not implemented")
-}
 func (UnimplementedNotificationServer) Enqueue(context.Context, *SendRequest) (*EnqueueResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Enqueue not implemented")
 }
@@ -110,24 +96,6 @@ type UnsafeNotificationServer interface {
 
 func RegisterNotificationServer(s grpc.ServiceRegistrar, srv NotificationServer) {
 	s.RegisterService(&Notification_ServiceDesc, srv)
-}
-
-func _Notification_CreatingTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreatingTestRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NotificationServer).CreatingTest(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/notification.v1.Notification/CreatingTest",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NotificationServer).CreatingTest(ctx, req.(*CreatingTestRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Notification_Enqueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -192,10 +160,6 @@ var Notification_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*NotificationServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreatingTest",
-			Handler:    _Notification_CreatingTest_Handler,
-		},
-		{
 			MethodName: "Enqueue",
 			Handler:    _Notification_Enqueue_Handler,
 		},
@@ -209,5 +173,5 @@ var Notification_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "notification/v1/notification.proto",
+	Metadata: "api/notification/v1/notification.proto",
 }

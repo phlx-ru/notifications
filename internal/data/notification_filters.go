@@ -29,9 +29,25 @@ func FilterByStatus(statuses ...schema.NotificationStatus) predicate.Notificatio
 	}
 }
 
+// FilterByPlannedAt deprecated
 func FilterByPlannedAt(plannedAt time.Time) predicate.Notification {
 	return func(selector *entSql.Selector) {
-		selector.Where(entSql.GTE(`planned_at`, plannedAt))
+		selector.Where(entSql.LTE(`planned_at`, plannedAt))
+	}
+}
+
+func FilterByPlannedAtOrRetryAt(now time.Time) predicate.Notification {
+	return func(selector *entSql.Selector) {
+		selector.
+			Where(
+				entSql.Or(
+					entSql.And(
+						entSql.IsNull(`retry_at`),
+						entSql.LTE(`planned_at`, now),
+					),
+					entSql.LTE(`retry_at`, now),
+				),
+			)
 	}
 }
 

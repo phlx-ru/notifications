@@ -2,26 +2,24 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"os"
 	"path"
 	"syscall"
-	"time"
 
 	"notifications/internal/biz"
 	"notifications/internal/conf"
+	"notifications/internal/pkg/logger"
+	"notifications/internal/pkg/metrics"
+	"notifications/internal/pkg/runtime"
 	"notifications/internal/senders"
-	"notifications/internal/utils"
 	"notifications/internal/worker"
 
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/joho/godotenv"
 	"github.com/vrecan/death/v3"
-	"gopkg.in/alexcesaro/statsd.v2"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
@@ -39,8 +37,8 @@ var (
 )
 
 func init() {
-	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
-	flag.StringVar(&dotenv, "dotenv", ".env", ".env file, eg: -dotenv .env.local")
+	flag.StringVar(&flagconf, "conf", "./configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&dotenv, "dotenv", ".env", ".env file, eg: -dotenv .env")
 }
 
 func newWorker(u *biz.NotificationUsecase, l log.Logger) *worker.Worker {
@@ -58,8 +56,8 @@ func run() error {
 
 	var err error
 
-	dead := death.NewDeath(syscall.SIGINT, os.Interrupt, syscall.SIGTERM)
 	ctx, cancelFunc := context.WithCancel(context.Background())
+	dead := death.NewDeath(syscall.SIGINT, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		dead.WaitForDeathWithFunc(cancelFunc)
 	}()
@@ -89,48 +87,36 @@ func run() error {
 		return err
 	}
 
-	loggerInstance := log.With(
-		log.DefaultLogger,
-		"ts", log.DefaultTimestamp,
-		"caller", log.DefaultCaller,
-		"service.id", id,
-		"service.name", Name,
-		"service.version", Version,
-		"trace.id", tracing.TraceID(),
-		"span.id", tracing.SpanID(),
-	)
-	logLevel := log.ParseLevel(bc.Log.Level)
-	logger := log.NewFilter(loggerInstance, log.FilterLevel(logLevel))
-	log.SetLogger(logger)
-	logs := log.NewHelper(logger)
+	logs := logger.New(id, Name, Version, bc.Log.Level)
+	logHelper := logger.NewHelper(logs, "scope", "worker")
+	dead.SetLogger(logHelper)
 
-	metrics, err := statsd.New(
-		statsd.Address(bc.Metrics.Address),
-		statsd.ErrorHandler(
-			func(err error) {
-				logs.Warnf(`failed to send metrics: %v`, err)
-			},
-		),
-		statsd.Mute(bc.Metrics.Mute),
-		statsd.Prefix(Name),
-		statsd.Tags("id", id, "name", Name, "version", Version),
-		statsd.FlushPeriod(time.Second),
-	)
-	if metrics == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New("metrics client is undefined")
-	}
-	if err != nil && !bc.Metrics.Mute {
+	metric, err := metrics.New(bc.Metrics.Address, Name, bc.Metrics.Mute)
+	if err != nil {
 		return err
 	}
-	defer metrics.Close()
-	metrics.Increment("starts.count")
+	defer metric.Close()
+	metric.Increment("starts.count")
+
+	database, cleanup, err := wireData(bc.Data, logs)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	go database.CollectDatabaseMetrics(ctx, metric, id)
+	go runtime.CollectGoMetrics(ctx, metric, id)
 
 	es := bc.Senders.GetEmail()
 
-	emailSender, err := senders.NewEmail(es.GetFrom(), es.GetAddress(), es.GetUsername(), es.GetPassword())
+	emailSender, err := senders.NewEmail(
+		es.GetFrom(),
+		es.GetAddress(),
+		es.GetUsername(),
+		es.GetPassword(),
+		metric,
+		logs,
+	)
 	if err != nil {
 		return err
 	}
@@ -140,24 +126,23 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	plainSender := senders.NewPlain(plainFile)
+	plainSender := senders.NewPlain(plainFile, metric, logs)
 
 	sendersSet := senders.NewSenders(plainSender, emailSender)
 
-	wrkr, cleanup, err := wireWorker(bc.Data, sendersSet, logger)
+	wrkr, err := wireWorker(database, sendersSet, metric, logs)
 	if err != nil {
 		log.Errorf("failed to wire worker: %v", err)
 		return nil
 	}
-	defer cleanup()
 
-	logs.Info("worker start")
+	logHelper.Info("worker start")
 	err = wrkr.Run(ctx)
-	if err != nil && err != utils.ErrTermSig && err != context.Canceled {
-		logs.Fatalf("worker failed: %v", err)
+	if err != nil && err != context.Canceled {
+		logHelper.Fatalf("worker failed: %v", err)
 
 	}
-	logs.Info("worker ends successfully")
+	logHelper.Info("worker ends successfully")
 
 	return nil
 }

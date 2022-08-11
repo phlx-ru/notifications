@@ -96,6 +96,11 @@ func (Notification) Fields() []ent.Field {
 			Default(time.Now).
 			Comment("time for start sending this notification"),
 
+		field.Time("retry_at").
+			Optional().
+			Nillable().
+			Comment("time for new try to send this notification"),
+
 		field.Int("retries").
 			Default(0).
 			Comment("count of retries to send notification"),

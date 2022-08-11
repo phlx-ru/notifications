@@ -109,6 +109,26 @@ func (nu *NotificationUpdate) SetNillablePlannedAt(t *time.Time) *NotificationUp
 	return nu
 }
 
+// SetRetryAt sets the "retry_at" field.
+func (nu *NotificationUpdate) SetRetryAt(t time.Time) *NotificationUpdate {
+	nu.mutation.SetRetryAt(t)
+	return nu
+}
+
+// SetNillableRetryAt sets the "retry_at" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableRetryAt(t *time.Time) *NotificationUpdate {
+	if t != nil {
+		nu.SetRetryAt(*t)
+	}
+	return nu
+}
+
+// ClearRetryAt clears the value of the "retry_at" field.
+func (nu *NotificationUpdate) ClearRetryAt() *NotificationUpdate {
+	nu.mutation.ClearRetryAt()
+	return nu
+}
+
 // SetRetries sets the "retries" field.
 func (nu *NotificationUpdate) SetRetries(i int) *NotificationUpdate {
 	nu.mutation.ResetRetries()
@@ -320,6 +340,19 @@ func (nu *NotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: notification.FieldPlannedAt,
 		})
 	}
+	if value, ok := nu.mutation.RetryAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: notification.FieldRetryAt,
+		})
+	}
+	if nu.mutation.RetryAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: notification.FieldRetryAt,
+		})
+	}
 	if value, ok := nu.mutation.Retries(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -443,6 +476,26 @@ func (nuo *NotificationUpdateOne) SetNillablePlannedAt(t *time.Time) *Notificati
 	if t != nil {
 		nuo.SetPlannedAt(*t)
 	}
+	return nuo
+}
+
+// SetRetryAt sets the "retry_at" field.
+func (nuo *NotificationUpdateOne) SetRetryAt(t time.Time) *NotificationUpdateOne {
+	nuo.mutation.SetRetryAt(t)
+	return nuo
+}
+
+// SetNillableRetryAt sets the "retry_at" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableRetryAt(t *time.Time) *NotificationUpdateOne {
+	if t != nil {
+		nuo.SetRetryAt(*t)
+	}
+	return nuo
+}
+
+// ClearRetryAt clears the value of the "retry_at" field.
+func (nuo *NotificationUpdateOne) ClearRetryAt() *NotificationUpdateOne {
+	nuo.mutation.ClearRetryAt()
 	return nuo
 }
 
@@ -685,6 +738,19 @@ func (nuo *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificat
 			Type:   field.TypeTime,
 			Value:  value,
 			Column: notification.FieldPlannedAt,
+		})
+	}
+	if value, ok := nuo.mutation.RetryAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: notification.FieldRetryAt,
+		})
+	}
+	if nuo.mutation.RetryAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: notification.FieldRetryAt,
 		})
 	}
 	if value, ok := nuo.mutation.Retries(); ok {

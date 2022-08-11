@@ -18,14 +18,14 @@ func TestPayload(t *testing.T) {
 	require.NoError(t, err)
 
 	payload := payloadEmail.MustToPayload()
-	require.Equal(t, string(payloadEmailBytes), payload.String())
+	require.JSONEq(t, string(payloadEmailBytes), payload.String())
 
 	payloadEmailCasted, err := payload.ToPayloadEmail()
 	require.NoError(t, err)
 
 	require.EqualValues(t, payloadEmail, *payloadEmailCasted)
 
-	ruinedPayload := Payload(`{"existential":"none"}`)
+	ruinedPayload := Payload(map[string]string{"existential": "none"})
 
 	ruinedPayloadEmail, err := ruinedPayload.ToPayloadEmail()
 	require.NoError(t, err)

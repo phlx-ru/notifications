@@ -154,31 +154,31 @@ func (m *MockEmailSender) EXPECT() *MockEmailSenderMockRecorder {
 }
 
 // SendHTML mocks base method.
-func (m *MockEmailSender) SendHTML(to []string, subject, body string) error {
+func (m *MockEmailSender) SendHTML(ctx context.Context, to []string, subject, body string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendHTML", to, subject, body)
+	ret := m.ctrl.Call(m, "SendHTML", ctx, to, subject, body)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendHTML indicates an expected call of SendHTML.
-func (mr *MockEmailSenderMockRecorder) SendHTML(to, subject, body interface{}) *gomock.Call {
+func (mr *MockEmailSenderMockRecorder) SendHTML(ctx, to, subject, body interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHTML", reflect.TypeOf((*MockEmailSender)(nil).SendHTML), to, subject, body)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHTML", reflect.TypeOf((*MockEmailSender)(nil).SendHTML), ctx, to, subject, body)
 }
 
 // SendText mocks base method.
-func (m *MockEmailSender) SendText(to []string, subject, body string) error {
+func (m *MockEmailSender) SendText(ctx context.Context, to []string, subject, body string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendText", to, subject, body)
+	ret := m.ctrl.Call(m, "SendText", ctx, to, subject, body)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendText indicates an expected call of SendText.
-func (mr *MockEmailSenderMockRecorder) SendText(to, subject, body interface{}) *gomock.Call {
+func (mr *MockEmailSenderMockRecorder) SendText(ctx, to, subject, body interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendText", reflect.TypeOf((*MockEmailSender)(nil).SendText), to, subject, body)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendText", reflect.TypeOf((*MockEmailSender)(nil).SendText), ctx, to, subject, body)
 }
 
 // MockPlainSender is a mock of PlainSender interface.
@@ -205,15 +205,15 @@ func (m *MockPlainSender) EXPECT() *MockPlainSenderMockRecorder {
 }
 
 // Send mocks base method.
-func (m *MockPlainSender) Send(message string) error {
+func (m *MockPlainSender) Send(ctx context.Context, message string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", message)
+	ret := m.ctrl.Call(m, "Send", ctx, message)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockPlainSenderMockRecorder) Send(message interface{}) *gomock.Call {
+func (mr *MockPlainSenderMockRecorder) Send(ctx, message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockPlainSender)(nil).Send), message)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockPlainSender)(nil).Send), ctx, message)
 }

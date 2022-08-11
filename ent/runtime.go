@@ -41,7 +41,7 @@ func init() {
 	// notification.DefaultPlannedAt holds the default value on creation for the planned_at field.
 	notification.DefaultPlannedAt = notificationDescPlannedAt.Default.(func() time.Time)
 	// notificationDescRetries is the schema descriptor for retries field.
-	notificationDescRetries := notificationFields[8].Descriptor()
+	notificationDescRetries := notificationFields[9].Descriptor()
 	// notification.DefaultRetries holds the default value on creation for the retries field.
 	notification.DefaultRetries = notificationDescRetries.Default.(int)
 }

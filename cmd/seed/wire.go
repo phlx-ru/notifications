@@ -6,23 +6,14 @@
 package main
 
 import (
-	"notifications/internal/conf"
-	"notifications/internal/pkg/metrics"
-	"notifications/internal/senders"
-	"notifications/internal/worker"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 
-	"notifications/internal/biz"
+	"notifications/internal/conf"
 	"notifications/internal/data"
 )
 
 // wireData init database
 func wireData(*conf.Data, log.Logger) (*data.Data, func(), error) {
 	panic(wire.Build(data.ProviderDataSet))
-}
-
-func wireWorker(*data.Data, *senders.Senders, metrics.Metrics, log.Logger) (*worker.Worker, error) {
-	panic(wire.Build(data.ProviderRepoSet, biz.ProviderSet, newWorker))
 }

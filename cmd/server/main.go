@@ -2,24 +2,23 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"os"
 	"path"
-	"time"
+
+	"notifications/internal/pkg/logger"
+	"notifications/internal/pkg/metrics"
+	"notifications/internal/pkg/runtime"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/joho/godotenv"
-	"gopkg.in/alexcesaro/statsd.v2"
 
 	"notifications/internal/conf"
-	"notifications/internal/data"
 	"notifications/internal/senders"
 )
 
@@ -38,17 +37,18 @@ var (
 )
 
 func init() {
-	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
-	flag.StringVar(&dotenv, "dotenv", ".env", ".env file, eg: -dotenv .env.local")
+	flag.StringVar(&flagconf, "conf", "./configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&dotenv, "dotenv", ".env", ".env file, eg: -dotenv .env")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
+func newApp(ctx context.Context, logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
 		kratos.Logger(logger),
+		kratos.Context(ctx),
 		kratos.Server(
 			gs,
 			hs,
@@ -67,6 +67,8 @@ func run() error {
 
 	var err error
 
+	ctx := context.Background()
+
 	envPath := path.Join(flagconf, dotenv)
 	err = godotenv.Overload(envPath)
 	if err != nil {
@@ -79,7 +81,9 @@ func run() error {
 		),
 		config.WithDecoder(conf.EnvDecoder),
 	)
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 
 	if err = c.Load(); err != nil {
 		return err
@@ -90,59 +94,38 @@ func run() error {
 		return err
 	}
 
-	loggerInstance := log.With(
-		log.DefaultLogger,
-		"ts", log.DefaultTimestamp,
-		"caller", log.DefaultCaller,
-		"service.id", id,
-		"service.name", Name,
-		"service.version", Version,
-		"trace.id", tracing.TraceID(),
-		"span.id", tracing.SpanID(),
-	)
-	logLevel := log.ParseLevel(bc.Log.Level)
-	logger := log.NewFilter(loggerInstance, log.FilterLevel(logLevel))
-	logs := log.NewHelper(logger)
+	logs := logger.New(id, Name, Version, bc.Log.Level)
+	logHelper := logger.NewHelper(logs, "scope", "server")
 
-	logs.Info("app started")
-
-	metrics, err := statsd.New(
-		statsd.Address(bc.Metrics.Address),
-		statsd.ErrorHandler(
-			func(err error) {
-				logs.Warnf(`failed to send metrics: %v`, err)
-			},
-		),
-		statsd.Mute(bc.Metrics.Mute),
-		statsd.Prefix(Name),
-		statsd.Tags("id", id, "name", Name, "version", Version),
-		statsd.FlushPeriod(time.Second),
-	)
-	if metrics == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New("metrics client is undefined")
-	}
-	if err != nil && !bc.Metrics.Mute {
+	metric, err := metrics.New(bc.Metrics.Address, Name, bc.Metrics.Mute)
+	if err != nil {
 		return err
 	}
-	defer metrics.Close()
-	metrics.Increment("starts.count")
+	defer metric.Close()
+	metric.Increment("starts.count")
 
-	database, cleanup, err := wireData(bc.Data, logger)
+	database, cleanup, err := wireData(bc.Data, logs)
 	if err != nil {
 		return err
 	}
 	defer cleanup()
 
-	err = data.Prepare(context.Background(), database, bc.Data.Database.Migrate)
-	if err != nil {
+	go database.CollectDatabaseMetrics(ctx, metric, id)
+	go runtime.CollectGoMetrics(ctx, metric, id)
+
+	if err = database.Prepare(ctx, bc.Data.Database.Migrate); err != nil {
 		return err
 	}
 
 	es := bc.Senders.GetEmail()
-	emailSender, err := senders.NewEmail(es.GetFrom(), es.GetAddress(), es.GetUsername(), es.GetPassword())
+	emailSender, err := senders.NewEmail(
+		es.GetFrom(),
+		es.GetAddress(),
+		es.GetUsername(),
+		es.GetPassword(),
+		metric,
+		logs,
+	)
 	if err != nil {
 		return err
 	}
@@ -152,11 +135,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	plainSender := senders.NewPlain(plainFile)
+	plainSender := senders.NewPlain(plainFile, metric, logs)
 
 	sendersSet := senders.NewSenders(plainSender, emailSender)
 
-	app, err := wireApp(database, bc.Server, sendersSet, logger)
+	app, err := wireApp(ctx, database, bc.Server, sendersSet, metric, logs)
 	if err != nil {
 		return err
 	}
@@ -166,7 +149,7 @@ func run() error {
 		return err
 	}
 
-	logs.Info("app terminates")
+	logHelper.Info("app terminates")
 
 	return nil
 }

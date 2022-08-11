@@ -6,6 +6,9 @@
 package main
 
 import (
+	"context"
+
+	"notifications/internal/pkg/metrics"
 	"notifications/internal/senders"
 
 	"github.com/go-kratos/kratos/v2"
@@ -25,6 +28,9 @@ func wireData(*conf.Data, log.Logger) (*data.Data, func(), error) {
 }
 
 // wireApp init kratos application.
-func wireApp(*data.Data, *conf.Server, *senders.Senders, log.Logger) (*kratos.App, error) {
+func wireApp(context.Context, *data.Data, *conf.Server, *senders.Senders, metrics.Metrics, log.Logger) (
+	*kratos.App,
+	error,
+) {
 	panic(wire.Build(server.ProviderSet, data.ProviderRepoSet, biz.ProviderSet, service.ProviderSet, newApp))
 }

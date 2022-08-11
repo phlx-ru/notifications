@@ -8,12 +8,6 @@ import "google/protobuf/timestamp.proto";
 option go_package = "notifications/api/notification/v1;v1";
 
 service Notification {
-  rpc CreatingTest (CreatingTestRequest) returns (CreatingTestReply) {
-    option (google.api.http) = {
-      get: "/notification"
-    };
-  }
-
   rpc Enqueue (SendRequest) returns (EnqueueResponse) {
     option (google.api.http) = {
       post: "/enqueue"
@@ -49,25 +43,24 @@ enum Type {
   email = 1;
   sms = 2;
   push = 3;
-  whatsapp = 4;
-  telegram = 5;
+  telegram = 4;
+  whatsapp = 5;
 }
 
 enum Status {
   draft = 0;
   pending = 1;
-  sent = 3;
-  retry = 4;
-  failed = 5;
+  sent = 2;
+  retry = 3;
+  failed = 4;
 }
 
 message SendRequest {
   Type type = 1;
   map<string, string> payload = 2;
-  uint64 ttl = 3;
-  Status status = 4;
-  google.protobuf.Timestamp plannedAt = 5;
-  int64 senderId = 6;
+  google.protobuf.Timestamp plannedAt = 3;
+  uint64 ttl = 4;
+  int64 senderId = 5;
 }
 
 message SendResponse {

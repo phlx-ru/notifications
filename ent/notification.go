@@ -20,7 +20,7 @@ type Notification struct {
 	ID int `json:"id,omitempty"`
 	// SenderID holds the value of the "sender_id" field.
 	SenderID int `json:"sender_id,omitempty"`
-	// types in (sms|email|whatsapp|push)
+	// types in (plain|sms|email|whatsapp|push)
 	Type schema.NotificationType `json:"type,omitempty"`
 	// message payload as map<string, any> variable by type
 	Payload schema.Payload `json:"payload,omitempty"`
@@ -34,6 +34,8 @@ type Notification struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// time for start sending this notification
 	PlannedAt time.Time `json:"planned_at,omitempty"`
+	// time for new try to send this notification
+	RetryAt *time.Time `json:"retry_at,omitempty"`
 	// count of retries to send notification
 	Retries int `json:"retries,omitempty"`
 	// time of notification was sent
@@ -51,7 +53,7 @@ func (*Notification) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case notification.FieldType, notification.FieldStatus:
 			values[i] = new(sql.NullString)
-		case notification.FieldCreatedAt, notification.FieldUpdatedAt, notification.FieldPlannedAt, notification.FieldSentAt:
+		case notification.FieldCreatedAt, notification.FieldUpdatedAt, notification.FieldPlannedAt, notification.FieldRetryAt, notification.FieldSentAt:
 			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Notification", columns[i])
@@ -124,6 +126,13 @@ func (n *Notification) assignValues(columns []string, values []interface{}) erro
 			} else if value.Valid {
 				n.PlannedAt = value.Time
 			}
+		case notification.FieldRetryAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field retry_at", values[i])
+			} else if value.Valid {
+				n.RetryAt = new(time.Time)
+				*n.RetryAt = value.Time
+			}
 		case notification.FieldRetries:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field retries", values[i])
@@ -188,6 +197,11 @@ func (n *Notification) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("planned_at=")
 	builder.WriteString(n.PlannedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := n.RetryAt; v != nil {
+		builder.WriteString("retry_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("retries=")
 	builder.WriteString(fmt.Sprintf("%v", n.Retries))

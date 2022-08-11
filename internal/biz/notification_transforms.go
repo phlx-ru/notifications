@@ -8,10 +8,11 @@ import (
 
 func transformNotificationModelToInDTO(notification *ent.Notification) *NotificationInDTO {
 	return &NotificationInDTO{
-		SendType: v1.Type(v1.Type_value[notification.Type.String()]),
-		SenderID: int64(notification.SenderID),
-		Payload:  &notification.Payload,
-		TTL:      notification.TTL,
+		SendType:  v1.Type(v1.Type_value[notification.Type.String()]),
+		SenderID:  int64(notification.SenderID),
+		Payload:   &notification.Payload,
+		TTL:       notification.TTL,
+		PlannedAt: &notification.PlannedAt,
 	}
 }
 
@@ -24,6 +25,9 @@ func transformNotificationInDTOToModel(
 		Type:     schema.NotificationType(dto.SendType.String()),
 		Payload:  *dto.Payload,
 		TTL:      dto.TTL,
+	}
+	if dto.PlannedAt != nil {
+		notification.PlannedAt = *dto.PlannedAt
 	}
 	for _, withField := range withFields {
 		withField(notification)

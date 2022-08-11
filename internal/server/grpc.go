@@ -1,25 +1,32 @@
 package server
 
 import (
-	v1helloworld "notifications/api/helloworld/v1"
+	"time"
+
 	v1notification "notifications/api/notification/v1"
 	"notifications/internal/conf"
+	"notifications/internal/middlewares"
+	"notifications/internal/pkg/metrics"
 	"notifications/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 )
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
 	c *conf.Server,
-	greeter *service.GreeterService,
 	notifier *service.NotificationService,
+	metric metrics.Metrics,
 	logger log.Logger,
 ) *grpc.Server {
 	var opts = []grpc.ServerOption{
+		grpc.Timeout(5 * time.Second), // TODO Check timeout
 		grpc.Middleware(
+			middlewares.Duration(metric, logger),
+			tracing.Server(),
 			recovery.Recovery(),
 		),
 	}
@@ -33,7 +40,6 @@ func NewGRPCServer(
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1helloworld.RegisterGreeterServer(srv, greeter)
 	v1notification.RegisterNotificationServer(srv, notifier)
 	return srv
 }

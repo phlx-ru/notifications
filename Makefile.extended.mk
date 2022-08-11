@@ -5,7 +5,7 @@ CONFIG_SWARM      := docker-compose.swarm.yml
 REGISTRY_HOST     := registry.services.phlx.ru
 CLUSTER           := swarm
 DOTENV            := .env
-SERVICES          := ${SERVICE_NAME}_server ${SERVICE_NAME}_worker
+SERVICES          := server worker
 
 .PHONY: path
 # Show command how add Go binaries to PATH making it accessible after `go install ...`
@@ -55,11 +55,13 @@ lint:
 .PHONY: update
 # Update service in Docker Swarm without downtime
 update:
-	@docker pull ${REGISTRY_HOST}/${SERVICE_NAME}:latest \
-		&& docker service update \
-		--with-registry-auth \
-		--image ${REGISTRY_HOST}/${SERVICE_NAME}:latest \
-		${CLUSTER}_${SERVICE_NAME}
+	@set -e; for service in ${SERVICES}; \
+		do docker pull ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest \
+			&& docker service update \
+			--with-registry-auth \
+			--image ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest \
+			${CLUSTER}_${SERVICE_NAME}_$${service} ; \
+	done
 
 .PHONY: deploy
 # Deploy to Docker Swarm
@@ -75,18 +77,25 @@ deploy:
 .PHONY: undeploy
 # Remove service from Docker Swarm
 undeploy:
-	@docker service rm ${CLUSTER}_${SERVICE_NAME}
+	@set -e; for service in ${SERVICES}; \
+		do docker service rm ${CLUSTER}_${SERVICE_NAME}_$${service} ; \
+	done
 
 .PHONY: push
 # Build and push image to registry
 push:
-	@docker build -t ${REGISTRY_HOST}/${SERVICE_NAME}:latest -f ${CURRENT_DIRECTORY}/Dockerfile ${CURRENT_DIRECTORY}/. \
-		&& docker push ${REGISTRY_HOST}/${SERVICE_NAME}:latest
+	@set -e; for service in ${SERVICES}; \
+		do docker build -t ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest \
+			-f ${CURRENT_DIRECTORY}/Dockerfile-$${service} ${CURRENT_DIRECTORY}/. \
+			&& docker push ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest ; \
+	done
 
 .PHONY: push
 # Build and push image to registry
 pull:
-	@docker pull ${REGISTRY_HOST}/${SERVICE_NAME}:latest
+	@set -e; for service in ${SERVICES}; \
+		do docker pull ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest ; \
+	done
 
 .PHONY: env
 # Display environment variables from infra .env
@@ -94,12 +103,6 @@ env:
 	@echo $$(cat ${INFRA_DIRECTORY}/${DOTENV} | sed '/^[[:blank:]]*#/d;s/#.*//' | xargs)
 
 .PHONY: logs
-# Display Docker Swarm container logs
+# Display Docker Swarm container logger
 logs:
 	@docker logs "$$(docker ps -q -f name=${CLUSTER}_${SERVICE_NAME})"
-
-blob:
-	@set -e; for service in ${SERVICES}; \
-		do docker build -t ${REGISTRY_HOST}/${service}:latest -f ${CURRENT_DIRECTORY}/Dockerfile-${service} \
-			${CURRENT_DIRECTORY}/. && docker push ${REGISTRY_HOST}/${service}:latest
-	done

@@ -16,9 +16,10 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/alexcesaro/statsd.v2"
 )
 
-//go:generate mockgen -source ./${GOFILE} -destination ./notification_repo_mock_test.go -package ${GOPACKAGE}
+//go:generate mockgen -source ./${GOFILE} -destination ./worker_repo_mock_test.go -package ${GOPACKAGE}
 
 type NotificationRepo interface {
 	biz.NotificationRepo
@@ -41,6 +42,9 @@ func TestWorker_Run(t *testing.T) {
 	ctx := context.Background()
 	loggerInstance := log.With(log.DefaultLogger, "ts", log.DefaultTimestamp)
 	logger := log.NewFilter(loggerInstance, log.FilterLevel(log.LevelFatal))
+
+	metricMuted, err := statsd.New(statsd.Mute(true))
+	require.NoError(t, err)
 
 	transaction := func(ctx context.Context, _ *sql.TxOptions, actions ...func(context.Context) error) error {
 		for _, action := range actions {
@@ -76,13 +80,13 @@ func TestWorker_Run(t *testing.T) {
 			},
 			plainSender: func() PlainSender {
 				plainSender := NewMockPlainSender(ctrl)
-				plainSender.EXPECT().Send(gomock.Any()).Times(0)
+				plainSender.EXPECT().Send(gomock.Any(), gomock.Any()).Times(0)
 				return plainSender
 			},
 			emailSender: func() EmailSender {
 				emailSender := NewMockEmailSender(ctrl)
-				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
-				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				return emailSender
 			},
 		},
@@ -117,13 +121,13 @@ func TestWorker_Run(t *testing.T) {
 			},
 			plainSender: func() PlainSender {
 				plainSender := NewMockPlainSender(ctrl)
-				plainSender.EXPECT().Send(gomock.Any()).Times(100)
+				plainSender.EXPECT().Send(gomock.Any(), gomock.Any()).Times(100)
 				return plainSender
 			},
 			emailSender: func() EmailSender {
 				emailSender := NewMockEmailSender(ctrl)
-				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
-				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				return emailSender
 			},
 		},
@@ -147,8 +151,9 @@ func TestWorker_Run(t *testing.T) {
 						func(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
 							require.Equal(t, 1, n.Retries)
 							require.Equal(t, schema.StatusRetry, n.Status)
+							require.NotNil(t, n.RetryAt)
 
-							plannedAtDuration := n.PlannedAt.Sub(time.Now())
+							plannedAtDuration := n.RetryAt.Sub(time.Now())
 							// Milliseconds subtract because of parallel run of tests
 							moreThanRetryInterval := plannedAtDuration > biz.RetryInterval-50*time.Millisecond
 							lessThanRetryIntervalWithFewSeconds := plannedAtDuration < biz.RetryInterval+3*time.Second
@@ -173,13 +178,16 @@ func TestWorker_Run(t *testing.T) {
 			},
 			plainSender: func() PlainSender {
 				plainSender := NewMockPlainSender(ctrl)
-				plainSender.EXPECT().Send(gomock.Any()).Return(errors.New("test for failed send")).Times(10)
+				plainSender.EXPECT().Send(
+					gomock.Any(),
+					gomock.Any(),
+				).Return(errors.New("test for failed send")).Times(10)
 				return plainSender
 			},
 			emailSender: func() EmailSender {
 				emailSender := NewMockEmailSender(ctrl)
-				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
-				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendText(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+				emailSender.EXPECT().SendHTML(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				return emailSender
 			},
 		},
@@ -195,7 +203,7 @@ func TestWorker_Run(t *testing.T) {
 					EmailSender: testCase.emailSender(),
 				}
 
-				usecase := biz.NewNotificationUsecase(notificationsRepoMock, sendersMock, logger)
+				usecase := biz.NewNotificationUsecase(notificationsRepoMock, sendersMock, metricMuted, logger)
 
 				worker := New(usecase, logger, RunOnceOption())
 

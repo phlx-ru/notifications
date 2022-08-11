@@ -11,21 +11,27 @@ import (
 	"notifications/internal/biz"
 	"notifications/internal/conf"
 	"notifications/internal/data"
+	"notifications/internal/pkg/metrics"
 	"notifications/internal/senders"
 	"notifications/internal/worker"
 )
 
 // Injectors from wire.go:
 
-func wireWorker(confData *conf.Data, sendersSenders *senders.Senders, logger log.Logger) (*worker.Worker, func(), error) {
+// wireData init database
+func wireData(confData *conf.Data, logger log.Logger) (*data.Data, func(), error) {
 	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	notificationRepo := data.NewNotificationRepo(dataData, logger)
-	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, logger)
-	workerWorker := newWorker(notificationUsecase, logger)
-	return workerWorker, func() {
+	return dataData, func() {
 		cleanup()
 	}, nil
+}
+
+func wireWorker(dataData *data.Data, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*worker.Worker, error) {
+	notificationRepo := data.NewNotificationRepo(dataData, logger, metricsMetrics)
+	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, metricsMetrics, logger)
+	workerWorker := newWorker(notificationUsecase, logger)
+	return workerWorker, nil
 }

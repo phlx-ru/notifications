@@ -10,24 +10,38 @@ import (
 	"notifications/ent"
 	"notifications/ent/schema"
 	"notifications/internal/biz"
+	"notifications/internal/pkg/logger"
+	"notifications/internal/pkg/metrics"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
 
+const (
+	metricSaveTimings                             = `data.notification.save.timings`
+	metricUpdateTimings                           = `data.notification.update.timings`
+	metricFindByIDTimings                         = `data.notification.findById.timings`
+	metricCountWaitingNotificationsTimings        = `data.notification.countWaitingNotifications.timings`
+	metricListWaitingNotificationsWithLockTimings = `data.notification.listWaitingNotificationsWithLock.timings`
+	metricTransactionTimings                      = `data.notification.transaction.timings`
+)
+
 type notificationRepo struct {
-	data *Data
-	log  *log.Helper
+	data   *Data
+	metric metrics.Metrics
+	logs   *log.Helper
 }
 
 // NewNotificationRepo .
-func NewNotificationRepo(data *Data, logger log.Logger) biz.NotificationRepo {
+func NewNotificationRepo(data *Data, logs log.Logger, metric metrics.Metrics) biz.NotificationRepo {
 	return &notificationRepo{
-		data: data,
-		log:  log.NewHelper(logger),
+		data:   data,
+		metric: metric,
+		logs:   logger.NewHelper(logs, "ts", log.DefaultTimestamp, "scope", "data-notification"),
 	}
 }
 
 func (r *notificationRepo) Save(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
+	defer r.metric.NewTiming().Send(metricSaveTimings)
 	if n == nil {
 		return nil, errors.New("notification is empty")
 	}
@@ -45,10 +59,15 @@ func (r *notificationRepo) Save(ctx context.Context, n *ent.Notification) (*ent.
 		creating = creating.SetSentAt(*n.SentAt)
 	}
 
+	if n.RetryAt != nil {
+		creating = creating.SetRetryAt(*n.RetryAt)
+	}
+
 	return creating.Save(ctx)
 }
 
 func (r *notificationRepo) Update(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
+	defer r.metric.NewTiming().Send(metricUpdateTimings)
 	if n == nil {
 		return nil, errors.New("notification is empty")
 	}
@@ -66,23 +85,25 @@ func (r *notificationRepo) Update(ctx context.Context, n *ent.Notification) (*en
 		updating = updating.SetSentAt(*n.SentAt)
 	}
 
-	updated, err := updating.Save(ctx)
-	if err != nil {
-		return nil, err
+	if n.RetryAt != nil {
+		updating = updating.SetRetryAt(*n.RetryAt)
 	}
-	return updated, nil
+
+	return updating.Save(ctx)
 }
 
 func (r *notificationRepo) FindByID(ctx context.Context, id int64) (*ent.Notification, error) {
+	defer r.metric.NewTiming().Send(metricFindByIDTimings)
 	return r.client(ctx).Notification.Get(ctx, int(id))
 }
 
 func (r *notificationRepo) CountWaitingNotifications(ctx context.Context) (int, error) {
+	defer r.metric.NewTiming().Send(metricCountWaitingNotificationsTimings)
 	return r.client(ctx).Notification.Query().
 		Where(
 			FilterByStatus(schema.StatusPending, schema.StatusRetry),
 			FilterByType(schema.Types...),
-			FilterByPlannedAt(time.Now()),
+			FilterByPlannedAtOrRetryAt(time.Now()),
 		).
 		Count(ctx)
 }
@@ -91,15 +112,17 @@ func (r *notificationRepo) ListWaitingNotificationsWithLock(ctx context.Context,
 	[]*ent.Notification,
 	error,
 ) {
+	defer r.metric.NewTiming().Send(metricListWaitingNotificationsWithLockTimings)
 	return r.client(ctx).Notification.Query().
 		Where(
 			FilterByStatus(schema.StatusPending, schema.StatusRetry),
 			FilterByType(schema.Types...),
-			FilterByPlannedAt(time.Now()),
+			FilterByPlannedAtOrRetryAt(time.Now()),
 			FilterForUpdateWithSkipLocked(),
 		).
 		Order(OrderByCreatedAt()).
 		Limit(limit).
+		Unique(false). // Cause: FOR UPDATE is not allowed with DISTINCT clause
 		All(ctx)
 }
 
@@ -108,17 +131,18 @@ func (r *notificationRepo) Transaction(
 	txOptions *databaseSql.TxOptions,
 	processes ...func(repoCtx context.Context) error,
 ) error {
+	defer r.metric.NewTiming().Send(metricTransactionTimings)
 	tx, err := r.data.ent.BeginTx(ctx, txOptions)
 	if err != nil {
-		r.log.Errorf(`failed to start tx: %v`, err)
+		r.logs.Errorf(`failed to start tx: %v`, err)
 		return err
 	}
 	defer func() {
 		if recovered := recover(); recovered != nil {
-			r.log.Errorf(`tx panic: recovered = %v; stack = %v`, recovered, string(debug.Stack()))
+			r.logs.Errorf(`tx panic: recovered = %v; stack = %v`, recovered, string(debug.Stack()))
 			if tx != nil {
 				if err := tx.Rollback(); err != nil {
-					r.log.Errorf(`tx panic rollback error: %v`, err)
+					r.logs.Errorf(`tx panic rollback error: %v`, err)
 				}
 			}
 		}
@@ -128,14 +152,14 @@ func (r *notificationRepo) Transaction(
 		if err := process(repoCtx); err != nil {
 			rollbackErr := tx.Rollback()
 			if rollbackErr != nil {
-				r.log.Errorf(`failed to rollback tx caused of err '%s' because of: %v`, err.Error(), rollbackErr)
+				r.logs.Errorf(`failed to rollback tx caused of err '%s' because of: %v`, err.Error(), rollbackErr)
 				return rollbackErr
 			}
 			return err
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		r.log.Errorf(`failed to commit tx: %v`, err)
+		r.logs.Errorf(`failed to commit tx: %v`, err)
 		return err
 	}
 	return nil

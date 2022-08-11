@@ -55,7 +55,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			return nil
 		default:
 		}
-		count, err := w.usecase.CountOfWaitingForProcessNotifications(ctx)
+		count, err := w.usecase.CountOfPendingNotifications(ctx)
 		if err != nil {
 			w.logger.Errorf(`failed to count waiting notifications: %v`, err)
 			return err
@@ -71,7 +71,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		goroutines := int(
 			math.Min(
 				float64(maxConcurrentWorkers),
-				math.Ceil(float64(count/notificationsLimit)),
+				math.Ceil(float64(count)/float64(notificationsLimit)),
 			),
 		)
 		found := int64(0)

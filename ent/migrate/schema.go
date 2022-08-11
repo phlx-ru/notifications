@@ -19,6 +19,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime, Default: "CURRENT_TIMESTAMP"},
 		{Name: "planned_at", Type: field.TypeTime},
+		{Name: "retry_at", Type: field.TypeTime, Nullable: true},
 		{Name: "retries", Type: field.TypeInt, Default: 0},
 		{Name: "sent_at", Type: field.TypeTime, Nullable: true},
 	}
@@ -46,7 +47,7 @@ var (
 			{
 				Name:    "notification_sent_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[10]},
+				Columns: []*schema.Column{NotificationsColumns[11]},
 			},
 		},
 	}

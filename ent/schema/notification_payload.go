@@ -7,18 +7,22 @@ import (
 	"net/mail"
 )
 
-type Payload []byte
+const (
+	marshalErrString = "<failed to marshal payload>"
+)
+
+type Payload map[string]string
 
 func (p Payload) String() string {
-	return string(p)
+	s, err := json.Marshal(p)
+	if err != nil {
+		return marshalErrString
+	}
+	return string(s)
 }
 
 func PayloadFromProto(proto map[string]string) (*Payload, error) {
-	bytes, err := json.Marshal(proto)
-	if err != nil {
-		return nil, err
-	}
-	payload := Payload(bytes)
+	payload := Payload(proto)
 	return &payload, nil
 }
 
@@ -26,24 +30,40 @@ type PayloadEmail struct {
 	To      string `json:"to"`
 	Subject string `json:"subject"`
 	Body    string `json:"body"`
-	IsHTML  bool   `json:"is_html"`
+	IsHTML  string `json:"is_html"`
 }
 
-func (p Payload) ToPayloadEmail() (*PayloadEmail, error) {
-	var pe PayloadEmail
-	err := json.Unmarshal(p, &pe)
+func toPayloadTyped[T PayloadPlain | PayloadEmail](source Payload) (*T, error) {
+	var res T
+	marshaled := source.String()
+	if marshaled == marshalErrString {
+		return nil, errors.New(marshalErrString)
+	}
+	err := json.Unmarshal([]byte(marshaled), &res)
 	if err != nil {
 		return nil, err
 	}
-	return &pe, nil
+	return &res, nil
 }
 
-func (pe *PayloadEmail) MustToPayload() Payload {
-	bytes, err := json.Marshal(pe)
+func mustToPayloadCommon(source any) Payload {
+	bytes, err := json.Marshal(source)
 	if err != nil {
 		panic(err)
 	}
-	return bytes
+	var res Payload
+	if err := json.Unmarshal(bytes, &res); err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func (p Payload) ToPayloadEmail() (*PayloadEmail, error) {
+	return toPayloadTyped[PayloadEmail](p)
+}
+
+func (pe *PayloadEmail) MustToPayload() Payload {
+	return mustToPayloadCommon(pe)
 }
 
 func (pe *PayloadEmail) Validate() error {
@@ -68,20 +88,11 @@ type PayloadPlain struct {
 }
 
 func (p Payload) ToPayloadPlain() (*PayloadPlain, error) {
-	var pp PayloadPlain
-	err := json.Unmarshal(p, &pp)
-	if err != nil {
-		return nil, err
-	}
-	return &pp, nil
+	return toPayloadTyped[PayloadPlain](p)
 }
 
 func (pp *PayloadPlain) MustToPayload() Payload {
-	bytes, err := json.Marshal(pp)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
+	return mustToPayloadCommon(pp)
 }
 
 func (pp *PayloadPlain) Validate() error {

@@ -132,6 +132,13 @@ func PlannedAt(v time.Time) predicate.Notification {
 	})
 }
 
+// RetryAt applies equality check predicate on the "retry_at" field. It's identical to RetryAtEQ.
+func RetryAt(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRetryAt), v))
+	})
+}
+
 // Retries applies equality check predicate on the "retries" field. It's identical to RetriesEQ.
 func Retries(v int) predicate.Notification {
 	return predicate.Notification(func(s *sql.Selector) {
@@ -767,6 +774,96 @@ func PlannedAtLT(v time.Time) predicate.Notification {
 func PlannedAtLTE(v time.Time) predicate.Notification {
 	return predicate.Notification(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPlannedAt), v))
+	})
+}
+
+// RetryAtEQ applies the EQ predicate on the "retry_at" field.
+func RetryAtEQ(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRetryAt), v))
+	})
+}
+
+// RetryAtNEQ applies the NEQ predicate on the "retry_at" field.
+func RetryAtNEQ(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldRetryAt), v))
+	})
+}
+
+// RetryAtIn applies the In predicate on the "retry_at" field.
+func RetryAtIn(vs ...time.Time) predicate.Notification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Notification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldRetryAt), v...))
+	})
+}
+
+// RetryAtNotIn applies the NotIn predicate on the "retry_at" field.
+func RetryAtNotIn(vs ...time.Time) predicate.Notification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Notification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldRetryAt), v...))
+	})
+}
+
+// RetryAtGT applies the GT predicate on the "retry_at" field.
+func RetryAtGT(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldRetryAt), v))
+	})
+}
+
+// RetryAtGTE applies the GTE predicate on the "retry_at" field.
+func RetryAtGTE(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldRetryAt), v))
+	})
+}
+
+// RetryAtLT applies the LT predicate on the "retry_at" field.
+func RetryAtLT(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldRetryAt), v))
+	})
+}
+
+// RetryAtLTE applies the LTE predicate on the "retry_at" field.
+func RetryAtLTE(v time.Time) predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldRetryAt), v))
+	})
+}
+
+// RetryAtIsNil applies the IsNil predicate on the "retry_at" field.
+func RetryAtIsNil() predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldRetryAt)))
+	})
+}
+
+// RetryAtNotNil applies the NotNil predicate on the "retry_at" field.
+func RetryAtNotNil() predicate.Notification {
+	return predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldRetryAt)))
 	})
 }
 

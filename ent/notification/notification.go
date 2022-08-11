@@ -28,6 +28,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldPlannedAt holds the string denoting the planned_at field in the database.
 	FieldPlannedAt = "planned_at"
+	// FieldRetryAt holds the string denoting the retry_at field in the database.
+	FieldRetryAt = "retry_at"
 	// FieldRetries holds the string denoting the retries field in the database.
 	FieldRetries = "retries"
 	// FieldSentAt holds the string denoting the sent_at field in the database.
@@ -47,6 +49,7 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldPlannedAt,
+	FieldRetryAt,
 	FieldRetries,
 	FieldSentAt,
 }
