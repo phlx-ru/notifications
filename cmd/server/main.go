@@ -6,9 +6,11 @@ import (
 	"os"
 	"path"
 
+	"notifications/internal/clients/telegram"
 	"notifications/internal/pkg/logger"
 	"notifications/internal/pkg/metrics"
 	"notifications/internal/pkg/runtime"
+	"notifications/internal/pkg/transport"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -137,7 +139,11 @@ func run() error {
 	}
 	plainSender := senders.NewPlain(plainFile, metric, logs)
 
-	sendersSet := senders.NewSenders(plainSender, emailSender)
+	httpClient := transport.NewHTTPClient()
+	telegramClient := telegram.New(bc.Senders.Telegram.BotToken, httpClient, metric, logs)
+	telegramSender := senders.NewTelegram(telegramClient, metric, logs)
+
+	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender)
 
 	app, err := wireApp(ctx, database, bc.Server, sendersSet, metric, logs)
 	if err != nil {

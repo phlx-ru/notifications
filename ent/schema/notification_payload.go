@@ -33,7 +33,7 @@ type PayloadEmail struct {
 	IsHTML  string `json:"is_html"`
 }
 
-func toPayloadTyped[T PayloadPlain | PayloadEmail](source Payload) (*T, error) {
+func toPayloadTyped[T PayloadPlain | PayloadEmail | PayloadTelegram](source Payload) (*T, error) {
 	var res T
 	marshaled := source.String()
 	if marshaled == marshalErrString {
@@ -98,6 +98,33 @@ func (pp *PayloadPlain) MustToPayload() Payload {
 func (pp *PayloadPlain) Validate() error {
 	if pp.Message == "" {
 		return errors.New(`payload plain has empty field 'message'`)
+	}
+	return nil
+}
+
+type PayloadTelegram struct {
+	ChatID                string `json:"chat_id"`
+	Text                  string `json:"text"`
+	ParseMode             string `json:"parse_mode,omitempty"`
+	DisableWebPagePreview string `json:"disable_web_page_preview,omitempty"`
+	DisableNotification   string `json:"disable_notification,omitempty"`
+	ProtectContent        string `json:"protect_content,omitempty"`
+}
+
+func (p Payload) ToPayloadTelegram() (*PayloadTelegram, error) {
+	return toPayloadTyped[PayloadTelegram](p)
+}
+
+func (pt *PayloadTelegram) MustToPayload() Payload {
+	return mustToPayloadCommon(pt)
+}
+
+func (pt *PayloadTelegram) Validate() error {
+	if pt.ChatID == "" {
+		return errors.New(`payload telegram has empty field 'chat_id'`)
+	}
+	if pt.Text == "" {
+		return errors.New(`payload telegram has empty field 'text'`)
 	}
 	return nil
 }

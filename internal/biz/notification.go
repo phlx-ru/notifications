@@ -53,6 +53,10 @@ const (
 	metricProcessPlainNotificationSuccess = `biz.notification.processPlainNotification.success`
 	metricProcessPlainNotificationFailure = `biz.notification.processPlainNotification.failure`
 	metricProcessPlainNotificationTimings = `biz.notification.processPlainNotification.timings`
+
+	metricProcessTelegramNotificationSuccess = `biz.notification.processTelegramNotification.success`
+	metricProcessTelegramNotificationFailure = `biz.notification.processTelegramNotification.failure`
+	metricProcessTelegramNotificationTimings = `biz.notification.processTelegramNotification.timings`
 )
 
 // NotificationRepo is a Notifications repo.
@@ -214,8 +218,9 @@ func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *Notifi
 	defer uc.metric.NewTiming().Send(metricSendNotificationTimings)
 
 	processors := map[v1.Type]NotificationProcessor{
-		v1.Type_plain: uc.ProcessPlainNotification,
-		v1.Type_email: uc.ProcessEmailNotification,
+		v1.Type_plain:    uc.ProcessPlainNotification,
+		v1.Type_email:    uc.ProcessEmailNotification,
+		v1.Type_telegram: uc.ProcessTelegramNotification,
 	}
 
 	var err error
@@ -363,6 +368,43 @@ func (uc *NotificationUsecase) ProcessPlainNotification(ctx context.Context, pay
 		return err
 	}
 	err = uc.senders.PlainSender.Send(ctx, payloadPlain.Message)
+	return err
+}
+
+func (uc *NotificationUsecase) ProcessTelegramNotification(ctx context.Context, payload *schema.Payload) error {
+	defer uc.metric.NewTiming().Send(metricProcessTelegramNotificationTimings)
+	var err error
+	defer func() {
+		if err != nil {
+			uc.metric.Increment(metricProcessTelegramNotificationFailure)
+			uc.logs.WithContext(ctx).Errorf("failed to process telegram notification: %v", err)
+		} else {
+			uc.metric.Increment(metricProcessTelegramNotificationSuccess)
+			uc.logs.WithContext(ctx).Info("successfully process telegram notification")
+		}
+	}()
+	var payloadTelegram *schema.PayloadTelegram
+	payloadTelegram, err = payload.ToPayloadTelegram()
+	if err != nil {
+		return err
+	}
+	if err = payloadTelegram.Validate(); err != nil {
+		return err
+	}
+	options := []senders.TelegramSenderOption{}
+	if payloadTelegram.ParseMode != "" {
+		options = append(options, senders.WithParseMode(payloadTelegram.ParseMode))
+	}
+	if payloadTelegram.DisableWebPagePreview != "" {
+		options = append(options, senders.WithDisableWebPagePreview(isTrue(payloadTelegram.DisableWebPagePreview)))
+	}
+	if payloadTelegram.DisableNotification != "" {
+		options = append(options, senders.WithDisableNotification(isTrue(payloadTelegram.DisableNotification)))
+	}
+	if payloadTelegram.ProtectContent != "" {
+		options = append(options, senders.WithProtectContent(isTrue(payloadTelegram.ProtectContent)))
+	}
+	err = uc.senders.TelegramSender.Send(ctx, payloadTelegram.ChatID, payloadTelegram.Text, options...)
 	return err
 }
 

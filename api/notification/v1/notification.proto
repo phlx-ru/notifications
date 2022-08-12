@@ -30,14 +30,6 @@ service Notification {
   }
 }
 
-message CreatingTestRequest {
-  string message = 1;
-}
-
-message CreatingTestReply {
-  string result = 1;
-}
-
 enum Type {
   plain = 0;
   email = 1;
@@ -70,13 +62,6 @@ message SendResponse {
 
 message EnqueueResponse {
   int64 id = 1;
-}
-
-message PayloadEmail {
-  string to = 1;
-  string subject = 2;
-  string body = 3;
-  bool html = 4;
 }
 
 message CheckRequest {

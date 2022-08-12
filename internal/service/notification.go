@@ -2,11 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
-	"time"
 
-	"notifications/ent"
 	"notifications/ent/schema"
 	"notifications/internal/biz"
 	"notifications/internal/senders"
@@ -33,35 +29,6 @@ func NewNotificationService(u *biz.NotificationUsecase, s *senders.Senders, l lo
 		senders: s,
 		logger:  log.NewHelper(l),
 	}
-}
-
-// CreatingTest TODO REMOVE
-func (s *NotificationService) CreatingTest(ctx context.Context, req *v1.CreatingTestRequest) (
-	*v1.CreatingTestReply,
-	error,
-) {
-	code := func() string {
-		rand.Seed(time.Now().Unix())
-		return fmt.Sprintf("%d", rand.Int()*10000%10000) //nolint
-	}
-	n := &ent.Notification{
-		SenderID: 0,
-		Type:     schema.TypeEmail,
-		Payload: (&schema.PayloadEmail{
-			To:      `phlx@ya.ru`,
-			Subject: `Test email notification`,
-			Body:    fmt.Sprintf(`%s — your personal auth code, keep it simple. Message: %s`, code(), req.Message),
-		}).MustToPayload(),
-		TTL:       300,
-		Status:    schema.StatusDraft,
-		PlannedAt: time.Now(),
-	}
-
-	res, err := s.usecase.CreateNotification(ctx, n)
-	if err != nil {
-		return nil, err
-	}
-	return &v1.CreatingTestReply{Result: fmt.Sprintf(`ok with id %d`, res.ID)}, nil
 }
 
 func (s *NotificationService) Enqueue(ctx context.Context, req *v1.SendRequest) (*v1.EnqueueResponse, error) {

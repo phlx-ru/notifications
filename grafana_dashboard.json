@@ -1523,7 +1523,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "notifications",
-  "uid": "service_notifications_metrics",
+  "uid": "service-notifications",
   "version": 2,
   "weekStart": ""
 }

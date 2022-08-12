@@ -102,6 +102,11 @@ pull:
 env:
 	@echo $$(cat ${INFRA_DIRECTORY}/${DOTENV} | sed '/^[[:blank:]]*#/d;s/#.*//' | xargs)
 
+.PHONY: grafana
+# Copy Grafana Dashboard file ./grafana_dashboard.json to infra Grafana dashboards directory
+grafana:
+	@cp -u ./grafana_dashboard.json ${INFRA_DIRECTORY}/grafana/dashboards/service-notifications.json
+
 .PHONY: logs
 # Display Docker Swarm container logger
 logs:

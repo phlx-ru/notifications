@@ -62,6 +62,10 @@ message Senders {
     string username = 3;
     string password = 4;
   }
+  message Telegram {
+    string botToken = 1;
+  }
   Plain plain = 1;
   Email email = 2;
+  Telegram telegram = 3;
 }

@@ -8,10 +8,12 @@ import (
 	"syscall"
 
 	"notifications/internal/biz"
+	"notifications/internal/clients/telegram"
 	"notifications/internal/conf"
 	"notifications/internal/pkg/logger"
 	"notifications/internal/pkg/metrics"
 	"notifications/internal/pkg/runtime"
+	"notifications/internal/pkg/transport"
 	"notifications/internal/senders"
 	"notifications/internal/worker"
 
@@ -108,15 +110,7 @@ func run() error {
 	go runtime.CollectGoMetrics(ctx, metric, id)
 
 	es := bc.Senders.GetEmail()
-
-	emailSender, err := senders.NewEmail(
-		es.GetFrom(),
-		es.GetAddress(),
-		es.GetUsername(),
-		es.GetPassword(),
-		metric,
-		logs,
-	)
+	emailSender, err := senders.NewEmail(es.From, es.Address, es.Username, es.Password, metric, logs)
 	if err != nil {
 		return err
 	}
@@ -128,7 +122,11 @@ func run() error {
 	}
 	plainSender := senders.NewPlain(plainFile, metric, logs)
 
-	sendersSet := senders.NewSenders(plainSender, emailSender)
+	httpClient := transport.NewHTTPClient()
+	telegramClient := telegram.New(bc.Senders.Telegram.BotToken, httpClient, metric, logs)
+	telegramSender := senders.NewTelegram(telegramClient, metric, logs)
+
+	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender)
 
 	wrkr, err := wireWorker(database, sendersSet, metric, logs)
 	if err != nil {

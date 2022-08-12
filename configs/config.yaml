@@ -24,3 +24,5 @@ senders:
     address: ${SENDERS_EMAIL_ADDRESS}
     username: ${SENDERS_EMAIL_USERNAME}
     password: ${SENDERS_EMAIL_PASSWORD}
+  telegram:
+    botToken: ${SENDERS_TELEGRAM_BOT_TOKEN}

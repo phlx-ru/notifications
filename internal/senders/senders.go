@@ -1,13 +1,15 @@
 package senders
 
 type Senders struct {
-	EmailSender EmailSender
-	PlainSender PlainSender
+	EmailSender    EmailSender
+	PlainSender    PlainSender
+	TelegramSender TelegramSender
 }
 
-func NewSenders(plainSender *Plain, emailSender *Email) *Senders {
+func NewSenders(plainSender *Plain, emailSender *Email, telegramSender *Telegram) *Senders {
 	return &Senders{
-		EmailSender: emailSender,
-		PlainSender: plainSender,
+		EmailSender:    emailSender,
+		PlainSender:    plainSender,
+		TelegramSender: telegramSender,
 	}
 }
