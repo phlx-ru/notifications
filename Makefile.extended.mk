@@ -78,7 +78,10 @@ deploy:
 # Remove service from Docker Swarm
 undeploy:
 	@set -e; for service in ${SERVICES}; \
-		do docker service rm ${CLUSTER}_${SERVICE_NAME}_$${service} ; \
+		do if docker service ls | grep -q "${CLUSTER}_${SERVICE_NAME}_$${service}" ; \
+			then docker service rm ${CLUSTER}_${SERVICE_NAME}_$${service} ; \
+			else echo "${CLUSTER}_${SERVICE_NAME}_$${service} is already undeployed" ; \
+		fi ; \
 	done
 
 .PHONY: push

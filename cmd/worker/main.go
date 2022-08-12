@@ -106,8 +106,8 @@ func run() error {
 	}
 	defer cleanup()
 
-	go database.CollectDatabaseMetrics(ctx, metric, id)
-	go runtime.CollectGoMetrics(ctx, metric, id)
+	go database.CollectDatabaseMetrics(ctx, metric)
+	go runtime.CollectGoMetrics(ctx, metric)
 
 	es := bc.Senders.GetEmail()
 	emailSender, err := senders.NewEmail(es.From, es.Address, es.Username, es.Password, metric, logs)

@@ -112,8 +112,8 @@ func run() error {
 	}
 	defer cleanup()
 
-	go database.CollectDatabaseMetrics(ctx, metric, id)
-	go runtime.CollectGoMetrics(ctx, metric, id)
+	go database.CollectDatabaseMetrics(ctx, metric)
+	go runtime.CollectGoMetrics(ctx, metric)
 
 	if err = database.Prepare(ctx, bc.Data.Database.Migrate); err != nil {
 		return err

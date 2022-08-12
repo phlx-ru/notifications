@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"notifications/ent"
@@ -108,8 +107,7 @@ func (d *Data) Prepare(ctx context.Context, m conf.Data_Database_Migrate) error 
 	return nil
 }
 
-func (d *Data) CollectDatabaseMetrics(ctx context.Context, metric metrics.Metrics, id string) {
-	metricPrefix := fmt.Sprintf(`postgres.%s.connections.`, id)
+func (d *Data) CollectDatabaseMetrics(ctx context.Context, metric metrics.Metrics) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -120,28 +118,28 @@ func (d *Data) CollectDatabaseMetrics(ctx context.Context, metric metrics.Metric
 		stats := d.db.Stats()
 
 		// The number of established connections both in use and idle.
-		metric.Gauge(metricPrefix+`open`, stats.OpenConnections)
+		metric.Gauge(`postgres.connections.open`, stats.OpenConnections)
 
 		// The number of connections currently in use.
-		metric.Gauge(metricPrefix+`used`, stats.InUse)
+		metric.Gauge(`postgres.connections.used`, stats.InUse)
 
 		// The number of idle connections.
-		metric.Gauge(metricPrefix+`idle`, stats.Idle)
+		metric.Gauge(`postgres.connections.idle`, stats.Idle)
 
 		// The total number of connections waited for.
-		metric.Gauge(metricPrefix+`wait`, stats.WaitCount)
+		metric.Gauge(`postgres.connections.wait`, stats.WaitCount)
 
 		// The total time blocked waiting for a new connection.
-		// metric.Gauge(metricPrefix+`wait_duration`, stats.WaitDuration) // TODO Duration or count ms?
+		// metric.Gauge(`postgres.connections.wait_duration`, stats.WaitDuration) // TODO Duration or count ms?
 
 		// The total number of connections closed due to SetMaxIdleConns.
-		metric.Gauge(metricPrefix+`max_idle_closed`, stats.MaxIdleClosed)
+		metric.Gauge(`postgres.connections.max_idle_closed`, stats.MaxIdleClosed)
 
 		// The total number of connections closed due to SetConnMaxIdleTime.
-		metric.Gauge(metricPrefix+`max_idle_time_closed`, stats.MaxIdleTimeClosed)
+		metric.Gauge(`postgres.connections.max_idle_time_closed`, stats.MaxIdleTimeClosed)
 
 		// The total number of connections closed due to SetConnMaxLifetime.
-		metric.Gauge(metricPrefix+`max_lifetime_closed`, stats.MaxLifetimeClosed)
+		metric.Gauge(`postgres.connections.max_lifetime_closed`, stats.MaxLifetimeClosed)
 
 		time.Sleep(sendStatsEvery)
 	}

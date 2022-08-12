@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"runtime"
 	"runtime/debug"
 	"time"
@@ -14,8 +13,8 @@ const (
 	maxGCPausesTimings = 10
 )
 
-func CollectGoMetrics(ctx context.Context, metric metrics.Metrics, id string) {
-	collect := goCollector(metric, id)
+func CollectGoMetrics(ctx context.Context, metric metrics.Metrics) {
+	collect := goCollector(metric)
 
 	for {
 		select {
@@ -29,9 +28,7 @@ func CollectGoMetrics(ctx context.Context, metric metrics.Metrics, id string) {
 	}
 }
 
-func goCollector(metrics metrics.Metrics, id string) func() {
-	prefix := fmt.Sprintf(`go.%s.`, id)
-
+func goCollector(metrics metrics.Metrics) func() {
 	lastNumGC := int64(0)
 
 	var statGC debug.GCStats
@@ -40,9 +37,9 @@ func goCollector(metrics metrics.Metrics, id string) func() {
 	return func() {
 
 		// goroutines and threads
-		metrics.Gauge(prefix+`goroutines`, runtime.NumGoroutine())
+		metrics.Gauge(`go.goroutines`, runtime.NumGoroutine())
 		n, _ := runtime.ThreadCreateProfile(nil)
-		metrics.Gauge(prefix+`threads`, n)
+		metrics.Gauge(`go.threads`, n)
 
 		// garbage collector stats
 		debug.ReadGCStats(&statGC)
@@ -52,7 +49,7 @@ func goCollector(metrics metrics.Metrics, id string) func() {
 		}
 		for i := 0; i < pausesCount && i < maxGCPausesTimings; i++ {
 			metrics.Timing(
-				prefix+`gc_pause_microseconds`,
+				`go.gc_pause_microseconds`,
 				float64(statGC.Pause[i]*time.Microsecond)/float64(time.Millisecond),
 			)
 		}
@@ -60,9 +57,9 @@ func goCollector(metrics metrics.Metrics, id string) func() {
 
 		// memory stats
 		runtime.ReadMemStats(&statMem)
-		metrics.Gauge(prefix+`mem_alloc_bytes`, statMem.Alloc)
-		metrics.Gauge(prefix+`mem_alloc_bytes_total`, statMem.TotalAlloc)
-		metrics.Gauge(prefix+`mem_sys_bytes`, statMem.Sys)
-		metrics.Gauge(prefix+`mem_heap_alloc_bytes`, statMem.HeapAlloc)
+		metrics.Gauge(`go.mem_alloc_bytes`, statMem.Alloc)
+		metrics.Gauge(`go.mem_alloc_bytes_total`, statMem.TotalAlloc)
+		metrics.Gauge(`go.mem_sys_bytes`, statMem.Sys)
+		metrics.Gauge(`go.mem_heap_alloc_bytes`, statMem.HeapAlloc)
 	}
 }
