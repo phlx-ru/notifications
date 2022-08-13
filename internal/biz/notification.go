@@ -3,12 +3,12 @@ package biz
 import (
 	"context"
 	databaseSql "database/sql"
-	"net/http"
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/AlekSi/pointer"
-	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 
 	v1 "notifications/api/notification/v1"
@@ -22,9 +22,9 @@ import (
 const (
 	RetryInterval = 5 * time.Second
 
-	metricCreateNotificationSuccess = `biz.notification.createNotification.success`
-	metricCreateNotificationFailure = `biz.notification.createNotification.failure`
-	metricCreateNotificationTimings = `biz.notification.createNotification.timings`
+	metricFindByIDSuccess = `biz.notification.findById.success`
+	metricFindByIDFailure = `biz.notification.findById.failure`
+	metricFindByIDTimings = `biz.notification.findById.timings`
 
 	metricCountOfPendingNotificationsSuccess = `biz.notification.countOfPendingNotifications.success`
 	metricCountOfPendingNotificationsFailure = `biz.notification.countOfPendingNotifications.failure`
@@ -57,6 +57,10 @@ const (
 	metricProcessTelegramNotificationSuccess = `biz.notification.processTelegramNotification.success`
 	metricProcessTelegramNotificationFailure = `biz.notification.processTelegramNotification.failure`
 	metricProcessTelegramNotificationTimings = `biz.notification.processTelegramNotification.timings`
+)
+
+var (
+	ErrNotificationNotFound = errors.New(`notification not found`)
 )
 
 // NotificationRepo is a Notifications repo.
@@ -117,18 +121,24 @@ func NewNotificationUsecase(
 	}
 }
 
-// CreateNotification creates a Notification, and returns saved Notification.
-func (uc *NotificationUsecase) CreateNotification(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
-	defer uc.metric.NewTiming().Send(metricCreateNotificationTimings)
-	notification, err := uc.repo.Save(ctx, n)
-	if err != nil {
-		uc.metric.Increment(metricCreateNotificationFailure)
-		uc.logs.WithContext(ctx).Errorf("failed to create notification with payload [%s]: %v", n.Payload.String(), err)
+func (uc *NotificationUsecase) CheckStatus(ctx context.Context, notificationID int64) (
+	*schema.NotificationStatus,
+	error,
+) {
+	defer uc.metric.NewTiming().Send(metricFindByIDTimings)
+	notification, err := uc.repo.FindByID(ctx, notificationID)
+
+	if err != nil && !ent.IsNotFound(err) {
+		uc.metric.Increment(metricFindByIDFailure)
+		uc.logs.WithContext(ctx).Errorf("failed to check notification status: %v", err)
 	} else {
-		uc.metric.Increment(metricCreateNotificationSuccess)
-		uc.logs.WithContext(ctx).Infof("successfully created notification with payload [%s]", n.Payload.String())
+		uc.metric.Increment(metricFindByIDSuccess)
+		uc.logs.WithContext(ctx).Info("successfully check notification status")
 	}
-	return notification, err
+	if ent.IsNotFound(err) {
+		return nil, ErrNotificationNotFound
+	}
+	return &notification.Status, err
 }
 
 func (uc *NotificationUsecase) CountOfPendingNotifications(ctx context.Context) (int, error) {
@@ -163,7 +173,7 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 
 		for _, notification := range list {
 			dto := transformNotificationModelToInDTO(notification)
-			err = uc.SendNotification(ctx, dto)
+			err = uc.SendNotificationWithoutSaving(ctx, dto)
 			if err == nil {
 				notification.Status = schema.StatusSent
 				notification.SentAt = pointer.ToTime(time.Now())
@@ -198,8 +208,6 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 			}
 		}
 
-		// TODO Metrics
-
 		return nil
 	}
 
@@ -214,7 +222,7 @@ func (uc *NotificationUsecase) ProcessNotifications(ctx context.Context, limit i
 	return found, processed, err
 }
 
-func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *NotificationInDTO) error {
+func (uc *NotificationUsecase) SendNotificationWithoutSaving(ctx context.Context, dto *NotificationInDTO) error {
 	defer uc.metric.NewTiming().Send(metricSendNotificationTimings)
 
 	processors := map[v1.Type]NotificationProcessor{
@@ -227,12 +235,7 @@ func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *Notifi
 	processor, ok := processors[dto.SendType]
 
 	if !ok {
-		err = errors.Newf(
-			http.StatusInternalServerError,
-			`UNKNOWN_NOTIFICATION_TYPE`,
-			`failed to send notification: unknown type '%s'`,
-			dto.SendType.String(),
-		)
+		err = fmt.Errorf(`failed to send notification: unknown type '%s'`, dto.SendType.String())
 	} else {
 		err = processor(ctx, dto.Payload)
 	}
@@ -248,7 +251,7 @@ func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *Notifi
 	return err
 }
 
-func (uc *NotificationUsecase) SendNotificationAndSaveToRepo(ctx context.Context, dto *NotificationInDTO) (
+func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *NotificationInDTO) (
 	*NotificationOutDTO,
 	error,
 ) {
@@ -259,7 +262,7 @@ func (uc *NotificationUsecase) SendNotificationAndSaveToRepo(ctx context.Context
 		Sent: false,
 	}
 	plannedAt := time.Now()
-	err = uc.SendNotification(ctx, dto)
+	err = uc.SendNotificationWithoutSaving(ctx, dto)
 	if err == nil {
 		result.Sent = true
 

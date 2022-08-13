@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.4.1
 // - protoc             v3.21.4
-// source: api/notification/v1/notification.proto
+// source: notification/v1/notification.proto
 
 package v1
 
@@ -31,9 +31,9 @@ type NotificationHTTPServer interface {
 
 func RegisterNotificationHTTPServer(s *http.Server, srv NotificationHTTPServer) {
 	r := s.Route("/")
-	r.POST("/enqueue", _Notification_Enqueue0_HTTP_Handler(srv))
-	r.POST("/send", _Notification_Send0_HTTP_Handler(srv))
-	r.POST("/check", _Notification_Check0_HTTP_Handler(srv))
+	r.POST("/v1/enqueue", _Notification_Enqueue0_HTTP_Handler(srv))
+	r.POST("/v1/send", _Notification_Send0_HTTP_Handler(srv))
+	r.POST("/v1/check", _Notification_Check0_HTTP_Handler(srv))
 }
 
 func _Notification_Enqueue0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.Context) error {
@@ -109,7 +109,7 @@ func NewNotificationHTTPClient(client *http.Client) NotificationHTTPClient {
 
 func (c *NotificationHTTPClientImpl) Check(ctx context.Context, in *CheckRequest, opts ...http.CallOption) (*CheckResponse, error) {
 	var out CheckResponse
-	pattern := "/check"
+	pattern := "/v1/check"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationNotificationCheck))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -122,7 +122,7 @@ func (c *NotificationHTTPClientImpl) Check(ctx context.Context, in *CheckRequest
 
 func (c *NotificationHTTPClientImpl) Enqueue(ctx context.Context, in *SendRequest, opts ...http.CallOption) (*EnqueueResponse, error) {
 	var out EnqueueResponse
-	pattern := "/enqueue"
+	pattern := "/v1/enqueue"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationNotificationEnqueue))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -135,7 +135,7 @@ func (c *NotificationHTTPClientImpl) Enqueue(ctx context.Context, in *SendReques
 
 func (c *NotificationHTTPClientImpl) Send(ctx context.Context, in *SendRequest, opts ...http.CallOption) (*SendResponse, error) {
 	var out SendResponse
-	pattern := "/send"
+	pattern := "/v1/send"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationNotificationSend))
 	opts = append(opts, http.PathTemplate(pattern))

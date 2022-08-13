@@ -10,21 +10,21 @@ option go_package = "notifications/api/notification/v1;v1";
 service Notification {
   rpc Enqueue (SendRequest) returns (EnqueueResponse) {
     option (google.api.http) = {
-      post: "/enqueue"
+      post: "/v1/enqueue"
       body: "*"
     };
   }
 
   rpc Send (SendRequest) returns (SendResponse) {
     option (google.api.http) = {
-      post: "/send"
+      post: "/v1/send"
       body: "*"
     };
   }
 
   rpc Check (CheckRequest) returns (CheckResponse) {
     option (google.api.http) = {
-      post: "/check"
+      post: "/v1/check"
       body: "*"
     };
   }
@@ -44,7 +44,7 @@ enum Status {
   pending = 1;
   sent = 2;
   retry = 3;
-  failed = 4;
+  fail = 4;
 }
 
 message SendRequest {

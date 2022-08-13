@@ -4,21 +4,51 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/mail"
+	"strings"
 )
 
 const (
-	marshalErrString = "<failed to marshal payload>"
+	marshalErrStringPattern = "<failed to marshal payload:%s>"
 )
 
 type Payload map[string]string
 
+func TypeToValidatorMap(p *Payload) map[NotificationType]PayloadTypedValidator {
+	return map[NotificationType]PayloadTypedValidator{
+		TypePlain:    ToPayloadTypedValidator(p.ToPayloadEmail()),
+		TypeEmail:    ToPayloadTypedValidator(p.ToPayloadEmail()),
+		TypeTelegram: ToPayloadTypedValidator(p.ToPayloadTelegram()),
+	}
+}
+
+type PayloadTypedValidator func() error
+
+func ToPayloadTypedValidator(typed PayloadTyped, err error) PayloadTypedValidator {
+	return func() error {
+		if err != nil {
+			return err
+		}
+		return typed.Validate()
+	}
+}
+
 func (p Payload) String() string {
 	s, err := json.Marshal(p)
 	if err != nil {
-		return marshalErrString
+		return fmt.Sprintf(marshalErrStringPattern, err.Error())
 	}
 	return string(s)
+}
+
+func (p Payload) Validate(as NotificationType) error {
+	validators := TypeToValidatorMap(&p)
+
+	validate, ok := validators[as]
+	if !ok {
+		return fmt.Errorf(`unknown or unimplemented type of notification '%s'`, as)
+	}
+
+	return validate()
 }
 
 func PayloadFromProto(proto map[string]string) (*Payload, error) {
@@ -26,18 +56,12 @@ func PayloadFromProto(proto map[string]string) (*Payload, error) {
 	return &payload, nil
 }
 
-type PayloadEmail struct {
-	To      string `json:"to"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
-	IsHTML  string `json:"is_html"`
-}
-
-func toPayloadTyped[T PayloadPlain | PayloadEmail | PayloadTelegram](source Payload) (*T, error) {
+func toPayloadTyped[T PayloadTyped](source Payload) (*T, error) {
 	var res T
 	marshaled := source.String()
-	if marshaled == marshalErrString {
-		return nil, errors.New(marshalErrString)
+	marshalErrPrefix := strings.Split(marshalErrStringPattern, "%s")[0]
+	if strings.HasPrefix(marshaled, marshalErrPrefix) {
+		return nil, errors.New(marshaled)
 	}
 	err := json.Unmarshal([]byte(marshaled), &res)
 	if err != nil {
@@ -58,73 +82,7 @@ func mustToPayloadCommon(source any) Payload {
 	return res
 }
 
-func (p Payload) ToPayloadEmail() (*PayloadEmail, error) {
-	return toPayloadTyped[PayloadEmail](p)
-}
-
-func (pe *PayloadEmail) MustToPayload() Payload {
-	return mustToPayloadCommon(pe)
-}
-
-func (pe *PayloadEmail) Validate() error {
-	if pe.To == "" {
-		return errors.New(`payload email has empty field 'to'`)
-	}
-	_, err := mail.ParseAddress(pe.To)
-	if err != nil {
-		return fmt.Errorf(`email '%s' is invalid: %w`, pe.To, err)
-	}
-	if pe.Subject == "" {
-		return errors.New(`payload email has empty field 'subject'`)
-	}
-	if pe.Body == "" {
-		return errors.New(`payload email has empty field 'body'`)
-	}
-	return nil
-}
-
-type PayloadPlain struct {
-	Message string `json:"message"`
-}
-
-func (p Payload) ToPayloadPlain() (*PayloadPlain, error) {
-	return toPayloadTyped[PayloadPlain](p)
-}
-
-func (pp *PayloadPlain) MustToPayload() Payload {
-	return mustToPayloadCommon(pp)
-}
-
-func (pp *PayloadPlain) Validate() error {
-	if pp.Message == "" {
-		return errors.New(`payload plain has empty field 'message'`)
-	}
-	return nil
-}
-
-type PayloadTelegram struct {
-	ChatID                string `json:"chat_id"`
-	Text                  string `json:"text"`
-	ParseMode             string `json:"parse_mode,omitempty"`
-	DisableWebPagePreview string `json:"disable_web_page_preview,omitempty"`
-	DisableNotification   string `json:"disable_notification,omitempty"`
-	ProtectContent        string `json:"protect_content,omitempty"`
-}
-
-func (p Payload) ToPayloadTelegram() (*PayloadTelegram, error) {
-	return toPayloadTyped[PayloadTelegram](p)
-}
-
-func (pt *PayloadTelegram) MustToPayload() Payload {
-	return mustToPayloadCommon(pt)
-}
-
-func (pt *PayloadTelegram) Validate() error {
-	if pt.ChatID == "" {
-		return errors.New(`payload telegram has empty field 'chat_id'`)
-	}
-	if pt.Text == "" {
-		return errors.New(`payload telegram has empty field 'text'`)
-	}
-	return nil
+type PayloadTyped interface {
+	MustToPayload() Payload
+	Validate() error
 }

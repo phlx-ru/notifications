@@ -13,6 +13,25 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
+var (
+	StatusesSchemaToProtoMap = map[schema.NotificationStatus]v1.Status{
+		schema.StatusDraft:   v1.Status_draft,
+		schema.StatusPending: v1.Status_pending,
+		schema.StatusSent:    v1.Status_sent,
+		schema.StatusRetry:   v1.Status_retry,
+		schema.StatusFail:    v1.Status_fail,
+	}
+
+	TypesProtoToSchemaMap = map[v1.Type]schema.NotificationType{
+		v1.Type_plain:    schema.TypePlain,
+		v1.Type_email:    schema.TypeEmail,
+		v1.Type_sms:      schema.TypeSMS,
+		v1.Type_push:     schema.TypePush,
+		v1.Type_telegram: schema.TypeTelegram,
+		v1.Type_whatsapp: schema.TypeWhatsApp,
+	}
+)
+
 type NotificationService struct {
 	v1.UnimplementedNotificationServer
 
@@ -34,7 +53,16 @@ func NewNotificationService(u *biz.NotificationUsecase, s *senders.Senders, l lo
 func (s *NotificationService) Enqueue(ctx context.Context, req *v1.SendRequest) (*v1.EnqueueResponse, error) {
 	payload, err := schema.PayloadFromProto(req.Payload)
 	if err != nil {
-		return nil, err
+		return nil, v1.ErrorInternalError(`payload conversion failed: %v`, err)
+	}
+
+	notificationType, ok := TypesProtoToSchemaMap[req.Type]
+	if !ok {
+		return nil, v1.ErrorInvalidRequest(`validation failed: type %s is unknown`, req.Type.String())
+	}
+	err = payload.Validate(notificationType)
+	if err != nil {
+		return nil, v1.ErrorInvalidRequest(`validation failed: %v`, err)
 	}
 
 	in := &biz.NotificationInDTO{
@@ -53,19 +81,27 @@ func (s *NotificationService) Enqueue(ctx context.Context, req *v1.SendRequest) 
 	if result != nil {
 		response.Id = result.ID
 	}
-	if err == nil {
-		s.logger.Infof("notification %d was sent successfully", response.Id)
-	} else {
-		s.logger.Errorf("notification %d was failed to send: %v", response.Id, err)
+	if err != nil {
+		s.logger.Errorf(`notification %d was failed to send: %v`, response.Id, err)
+		return nil, v1.ErrorInternalError(`enqueue notification failed: %v`, err)
 	}
-
-	return response, err
+	s.logger.Infof("notification %d was sent successfully", response.Id)
+	return response, nil
 }
 
 func (s *NotificationService) Send(ctx context.Context, req *v1.SendRequest) (*v1.SendResponse, error) {
 	payload, err := schema.PayloadFromProto(req.Payload)
 	if err != nil {
-		return nil, err
+		return nil, v1.ErrorInternalError(`payload conversion failed: %v`, err)
+	}
+
+	notificationType, ok := TypesProtoToSchemaMap[req.Type]
+	if !ok {
+		return nil, v1.ErrorInvalidRequest(`validation failed: type %s is unknown`, req.Type.String())
+	}
+	err = payload.Validate(notificationType)
+	if err != nil {
+		return nil, v1.ErrorInvalidRequest(`validation failed: %v`, err)
 	}
 
 	in := &biz.NotificationInDTO{
@@ -75,17 +111,28 @@ func (s *NotificationService) Send(ctx context.Context, req *v1.SendRequest) (*v
 		TTL:      int(req.Ttl),
 	}
 
-	response := &v1.SendResponse{}
-	result, err := s.usecase.SendNotificationAndSaveToRepo(ctx, in)
-	if result != nil {
-		response.Id = result.ID
-		response.Sent = result.Sent
+	result, err := s.usecase.SendNotification(ctx, in)
+	if err != nil {
+		s.logger.Errorf(`notification was failed to send: %v`, err)
+		return nil, v1.ErrorInternalError(`send notification failed: %v`, err)
 	}
-	if err == nil {
-		s.logger.Infof("notification %d was sent successfully", response.Id)
-	} else {
-		s.logger.Errorf("notification %d was failed to send: %v", response.Id, err)
+	s.logger.Infof("notification %d was sent successfully", result.ID)
+	return &v1.SendResponse{
+		Id:   result.ID,
+		Sent: result.Sent,
+	}, nil
+}
+
+func (s *NotificationService) Check(ctx context.Context, req *v1.CheckRequest) (*v1.CheckResponse, error) {
+	status, err := s.usecase.CheckStatus(ctx, req.Id)
+	if err == biz.ErrNotificationNotFound {
+		return nil, v1.ErrorNotificationNotFound(`notification with id %d was not found`, req.Id)
+	}
+	if err != nil {
+		return nil, v1.ErrorInternalError(`check status failed: %v`, err)
 	}
 
-	return response, err
+	return &v1.CheckResponse{
+		Status: StatusesSchemaToProtoMap[*status],
+	}, nil
 }
