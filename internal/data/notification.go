@@ -20,19 +20,20 @@ const (
 	metricSaveTimings                             = `data.notification.save.timings`
 	metricUpdateTimings                           = `data.notification.update.timings`
 	metricFindByIDTimings                         = `data.notification.findById.timings`
+	metricDeleteByIDTimings                       = `data.notification.deleteById.timings`
 	metricCountWaitingNotificationsTimings        = `data.notification.countWaitingNotifications.timings`
 	metricListWaitingNotificationsWithLockTimings = `data.notification.listWaitingNotificationsWithLock.timings`
 	metricTransactionTimings                      = `data.notification.transaction.timings`
 )
 
 type notificationRepo struct {
-	data   *Data
+	data   Database
 	metric metrics.Metrics
 	logs   *log.Helper
 }
 
 // NewNotificationRepo .
-func NewNotificationRepo(data *Data, logs log.Logger, metric metrics.Metrics) biz.NotificationRepo {
+func NewNotificationRepo(data Database, logs log.Logger, metric metrics.Metrics) biz.NotificationRepo {
 	return &notificationRepo{
 		data:   data,
 		metric: metric,
@@ -92,9 +93,15 @@ func (r *notificationRepo) Update(ctx context.Context, n *ent.Notification) (*en
 	return updating.Save(ctx)
 }
 
-func (r *notificationRepo) FindByID(ctx context.Context, id int64) (*ent.Notification, error) {
+func (r *notificationRepo) FindByID(ctx context.Context, id int) (*ent.Notification, error) {
 	defer r.metric.NewTiming().Send(metricFindByIDTimings)
-	return r.client(ctx).Notification.Get(ctx, int(id))
+	return r.client(ctx).Notification.Get(ctx, id)
+}
+
+func (r *notificationRepo) DeleteByID(ctx context.Context, id int) error {
+	defer r.metric.NewTiming().Send(metricDeleteByIDTimings)
+	_, err := r.client(ctx).Notification.Delete().Where(FilterByID(id)).Exec(ctx)
+	return err
 }
 
 func (r *notificationRepo) CountWaitingNotifications(ctx context.Context) (int, error) {
@@ -132,7 +139,7 @@ func (r *notificationRepo) Transaction(
 	processes ...func(repoCtx context.Context) error,
 ) error {
 	defer r.metric.NewTiming().Send(metricTransactionTimings)
-	tx, err := r.data.ent.BeginTx(ctx, txOptions)
+	tx, err := r.data.Ent().BeginTx(ctx, txOptions)
 	if err != nil {
 		r.logs.Errorf(`failed to start tx: %v`, err)
 		return err
@@ -170,5 +177,5 @@ func (r *notificationRepo) client(ctx context.Context) *ent.Client {
 	if client := ent.FromContext(ctx); client != nil {
 		return client
 	}
-	return r.data.ent
+	return r.data.Ent()
 }

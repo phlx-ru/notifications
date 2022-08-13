@@ -22,19 +22,19 @@ import (
 // Injectors from wire.go:
 
 // wireData init database
-func wireData(confData *conf.Data, logger log.Logger) (*data.Data, func(), error) {
-	dataData, cleanup, err := data.NewData(confData, logger)
+func wireData(confData *conf.Data, logger log.Logger) (data.Database, func(), error) {
+	database, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	return dataData, func() {
+	return database, func() {
 		cleanup()
 	}, nil
 }
 
 // wireApp init kratos application.
-func wireApp(contextContext context.Context, dataData *data.Data, confServer *conf.Server, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*kratos.App, error) {
-	notificationRepo := data.NewNotificationRepo(dataData, logger, metricsMetrics)
+func wireApp(contextContext context.Context, database data.Database, confServer *conf.Server, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*kratos.App, error) {
+	notificationRepo := data.NewNotificationRepo(database, logger, metricsMetrics)
 	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, metricsMetrics, logger)
 	notificationService := service.NewNotificationService(notificationUsecase, sendersSenders, logger)
 	grpcServer := server.NewGRPCServer(confServer, notificationService, metricsMetrics, logger)

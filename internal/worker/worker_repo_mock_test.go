@@ -51,8 +51,22 @@ func (mr *MockNotificationRepoMockRecorder) CountWaitingNotifications(ctx interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountWaitingNotifications", reflect.TypeOf((*MockNotificationRepo)(nil).CountWaitingNotifications), ctx)
 }
 
+// DeleteByID mocks base method.
+func (m *MockNotificationRepo) DeleteByID(ctx context.Context, id int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteByID", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteByID indicates an expected call of DeleteByID.
+func (mr *MockNotificationRepoMockRecorder) DeleteByID(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByID", reflect.TypeOf((*MockNotificationRepo)(nil).DeleteByID), ctx, id)
+}
+
 // FindByID mocks base method.
-func (m *MockNotificationRepo) FindByID(arg0 context.Context, arg1 int64) (*ent.Notification, error) {
+func (m *MockNotificationRepo) FindByID(arg0 context.Context, arg1 int) (*ent.Notification, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByID", arg0, arg1)
 	ret0, _ := ret[0].(*ent.Notification)

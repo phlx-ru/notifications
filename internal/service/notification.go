@@ -50,6 +50,26 @@ func NewNotificationService(u *biz.NotificationUsecase, s *senders.Senders, l lo
 	}
 }
 
+func (s *NotificationService) Check(ctx context.Context, req *v1.CheckRequest) (*v1.CheckResponse, error) {
+	if req.Id < 0 {
+		return nil, v1.ErrorInvalidRequest(`validation failed: id=%d is incorrect`, req.Id)
+	}
+	if req.Id == 0 {
+		return nil, v1.ErrorInvalidRequest(`validation failed: id was not set`)
+	}
+	status, err := s.usecase.CheckStatus(ctx, req.Id)
+	if err == biz.ErrNotificationNotFound {
+		return nil, v1.ErrorNotificationNotFound(`notification with id %d was not found`, req.Id)
+	}
+	if err != nil {
+		return nil, v1.ErrorInternalError(`check status failed: %v`, err)
+	}
+
+	return &v1.CheckResponse{
+		Status: StatusesSchemaToProtoMap[*status],
+	}, nil
+}
+
 func (s *NotificationService) Enqueue(ctx context.Context, req *v1.SendRequest) (*v1.EnqueueResponse, error) {
 	payload, err := schema.PayloadFromProto(req.Payload)
 	if err != nil {
@@ -120,19 +140,5 @@ func (s *NotificationService) Send(ctx context.Context, req *v1.SendRequest) (*v
 	return &v1.SendResponse{
 		Id:   result.ID,
 		Sent: result.Sent,
-	}, nil
-}
-
-func (s *NotificationService) Check(ctx context.Context, req *v1.CheckRequest) (*v1.CheckResponse, error) {
-	status, err := s.usecase.CheckStatus(ctx, req.Id)
-	if err == biz.ErrNotificationNotFound {
-		return nil, v1.ErrorNotificationNotFound(`notification with id %d was not found`, req.Id)
-	}
-	if err != nil {
-		return nil, v1.ErrorInternalError(`check status failed: %v`, err)
-	}
-
-	return &v1.CheckResponse{
-		Status: StatusesSchemaToProtoMap[*status],
 	}, nil
 }

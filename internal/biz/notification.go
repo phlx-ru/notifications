@@ -69,7 +69,9 @@ type NotificationRepo interface {
 
 	Update(context.Context, *ent.Notification) (*ent.Notification, error)
 
-	FindByID(context.Context, int64) (*ent.Notification, error)
+	FindByID(context.Context, int) (*ent.Notification, error)
+
+	DeleteByID(ctx context.Context, id int) error
 
 	ListWaitingNotificationsWithLock(ctx context.Context, limit int) (
 		[]*ent.Notification,
@@ -126,7 +128,7 @@ func (uc *NotificationUsecase) CheckStatus(ctx context.Context, notificationID i
 	error,
 ) {
 	defer uc.metric.NewTiming().Send(metricFindByIDTimings)
-	notification, err := uc.repo.FindByID(ctx, notificationID)
+	notification, err := uc.repo.FindByID(ctx, int(notificationID))
 
 	if err != nil && !ent.IsNotFound(err) {
 		uc.metric.Increment(metricFindByIDFailure)

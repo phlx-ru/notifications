@@ -174,12 +174,6 @@ func SenderIDIn(vs ...int) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldSenderID), v...))
 	})
 }
@@ -191,12 +185,6 @@ func SenderIDNotIn(vs ...int) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldSenderID), v...))
 	})
 }
@@ -252,12 +240,6 @@ func TypeIn(vs ...schema.NotificationType) predicate.Notification {
 		v[i] = string(vs[i])
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldType), v...))
 	})
 }
@@ -269,12 +251,6 @@ func TypeNotIn(vs ...schema.NotificationType) predicate.Notification {
 		v[i] = string(vs[i])
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldType), v...))
 	})
 }
@@ -372,12 +348,6 @@ func TTLIn(vs ...int) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldTTL), v...))
 	})
 }
@@ -389,12 +359,6 @@ func TTLNotIn(vs ...int) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldTTL), v...))
 	})
 }
@@ -450,12 +414,6 @@ func StatusIn(vs ...schema.NotificationStatus) predicate.Notification {
 		v[i] = string(vs[i])
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldStatus), v...))
 	})
 }
@@ -467,12 +425,6 @@ func StatusNotIn(vs ...schema.NotificationStatus) predicate.Notification {
 		v[i] = string(vs[i])
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldStatus), v...))
 	})
 }
@@ -570,12 +522,6 @@ func CreatedAtIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldCreatedAt), v...))
 	})
 }
@@ -587,12 +533,6 @@ func CreatedAtNotIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
 	})
 }
@@ -646,12 +586,6 @@ func UpdatedAtIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
 	})
 }
@@ -663,12 +597,6 @@ func UpdatedAtNotIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
 	})
 }
@@ -722,12 +650,6 @@ func PlannedAtIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldPlannedAt), v...))
 	})
 }
@@ -739,12 +661,6 @@ func PlannedAtNotIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldPlannedAt), v...))
 	})
 }
@@ -798,12 +714,6 @@ func RetryAtIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldRetryAt), v...))
 	})
 }
@@ -815,12 +725,6 @@ func RetryAtNotIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldRetryAt), v...))
 	})
 }
@@ -888,12 +792,6 @@ func RetriesIn(vs ...int) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldRetries), v...))
 	})
 }
@@ -905,12 +803,6 @@ func RetriesNotIn(vs ...int) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldRetries), v...))
 	})
 }
@@ -964,12 +856,6 @@ func SentAtIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.In(s.C(FieldSentAt), v...))
 	})
 }
@@ -981,12 +867,6 @@ func SentAtNotIn(vs ...time.Time) predicate.Notification {
 		v[i] = vs[i]
 	}
 	return predicate.Notification(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
 		s.Where(sql.NotIn(s.C(FieldSentAt), v...))
 	})
 }

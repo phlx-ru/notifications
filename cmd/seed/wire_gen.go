@@ -15,12 +15,12 @@ import (
 // Injectors from wire.go:
 
 // wireData init database
-func wireData(confData *conf.Data, logger log.Logger) (*data.Data, func(), error) {
-	dataData, cleanup, err := data.NewData(confData, logger)
+func wireData(confData *conf.Data, logger log.Logger) (data.Database, func(), error) {
+	database, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	return dataData, func() {
+	return database, func() {
 		cleanup()
 	}, nil
 }

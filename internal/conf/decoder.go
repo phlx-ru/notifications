@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	envKeywordRegex = `\${((.+?)(:\w+)*?)}`
+	envKeywordRegex = `\${((.+?)(:.+?)*?)}`
 )
 
 func EnvDecoder(kv *config.KeyValue, v map[string]any) error {

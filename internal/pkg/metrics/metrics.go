@@ -16,6 +16,7 @@ type Metrics interface {
 	Timing(bucket string, value interface{})
 	Histogram(bucket string, value interface{})
 	NewTiming() statsd.Timing
+	Close()
 }
 
 func New(address, name string, mute bool) (*statsd.Client, error) {

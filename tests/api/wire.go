@@ -3,16 +3,14 @@
 
 // The build tag makes sure the stub is not built in the final build.
 
-package main
+package api
 
 import (
-	"context"
-
 	"notifications/internal/pkg/metrics"
 	"notifications/internal/senders"
 
-	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/google/wire"
 
 	"notifications/internal/biz"
@@ -27,10 +25,10 @@ func wireData(*conf.Data, log.Logger) (data.Database, func(), error) {
 	panic(wire.Build(data.ProviderDataSet))
 }
 
-// wireApp init kratos application.
-func wireApp(context.Context, data.Database, *conf.Server, *senders.Senders, metrics.Metrics, log.Logger) (
-	*kratos.App,
-	error,
-) {
-	panic(wire.Build(server.ProviderSet, data.ProviderRepoSet, biz.ProviderSet, service.ProviderSet, newApp))
+func wireNotificationRepo(data.Database, log.Logger, metrics.Metrics) biz.NotificationRepo {
+	panic(wire.Build(data.ProviderRepoSet))
+}
+
+func wireHTTPServer(data.Database, *conf.Server, *senders.Senders, metrics.Metrics, log.Logger) *http.Server {
+	panic(wire.Build(server.ProviderSet, data.ProviderRepoSet, biz.ProviderSet, service.ProviderSet))
 }

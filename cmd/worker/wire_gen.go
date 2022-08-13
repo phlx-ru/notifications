@@ -19,18 +19,18 @@ import (
 // Injectors from wire.go:
 
 // wireData init database
-func wireData(confData *conf.Data, logger log.Logger) (*data.Data, func(), error) {
-	dataData, cleanup, err := data.NewData(confData, logger)
+func wireData(confData *conf.Data, logger log.Logger) (data.Database, func(), error) {
+	database, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	return dataData, func() {
+	return database, func() {
 		cleanup()
 	}, nil
 }
 
-func wireWorker(dataData *data.Data, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*worker.Worker, error) {
-	notificationRepo := data.NewNotificationRepo(dataData, logger, metricsMetrics)
+func wireWorker(database data.Database, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*worker.Worker, error) {
+	notificationRepo := data.NewNotificationRepo(database, logger, metricsMetrics)
 	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, metricsMetrics, logger)
 	workerWorker := newWorker(notificationUsecase, logger)
 	return workerWorker, nil

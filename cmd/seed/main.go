@@ -102,7 +102,7 @@ func run() error {
 	return seed(ctx, database)
 }
 
-func seed(ctx context.Context, database *data.Data) error {
+func seed(ctx context.Context, database data.Database) error {
 	return database.Seed(
 		ctx, func(ctx context.Context, ent *ent.Client) error {
 			tx, err := ent.Tx(ctx)

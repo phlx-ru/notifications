@@ -19,10 +19,10 @@ import (
 )
 
 // wireData init database
-func wireData(*conf.Data, log.Logger) (*data.Data, func(), error) {
+func wireData(*conf.Data, log.Logger) (data.Database, func(), error) {
 	panic(wire.Build(data.ProviderDataSet))
 }
 
-func wireWorker(*data.Data, *senders.Senders, metrics.Metrics, log.Logger) (*worker.Worker, error) {
+func wireWorker(data.Database, *senders.Senders, metrics.Metrics, log.Logger) (*worker.Worker, error) {
 	panic(wire.Build(data.ProviderRepoSet, biz.ProviderSet, newWorker))
 }

@@ -35,8 +35,18 @@ type Data struct {
 	logger *log.Helper
 }
 
+type Database interface {
+	DB() *sql.DB
+	Ent() *ent.Client
+	MigrateSoft(ctx context.Context) error
+	MigrateHard(ctx context.Context) error
+	Prepare(ctx context.Context, m conf.Data_Database_Migrate) error
+	CollectDatabaseMetrics(ctx context.Context, metric metrics.Metrics)
+	Seed(ctx context.Context, seeding func(context.Context, *ent.Client) error) error
+}
+
 // NewData .
-func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger) (Database, func(), error) {
 	logHelper := log.NewHelper(log.With(logger, "module", "ent/data/logger-job"))
 
 	drv, err := entDialectSQL.Open(c.Database.Driver, c.Database.Source)
@@ -70,6 +80,14 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 		ent:    client,
 		logger: logHelper,
 	}, cleanup, nil
+}
+
+func (d *Data) DB() *sql.DB {
+	return d.db
+}
+
+func (d *Data) Ent() *ent.Client {
+	return d.ent
 }
 
 // MigrateSoft only creates and updates schema entities

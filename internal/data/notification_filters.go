@@ -9,6 +9,12 @@ import (
 	entSql "entgo.io/ent/dialect/sql"
 )
 
+func FilterByID(id int) predicate.Notification {
+	return func(selector *entSql.Selector) {
+		selector.Where(entSql.P().EQ(`id`, id))
+	}
+}
+
 func FilterByType(types ...schema.NotificationType) predicate.Notification {
 	return func(selector *entSql.Selector) {
 		var args []any

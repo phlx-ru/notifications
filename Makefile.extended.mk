@@ -27,11 +27,6 @@ run-worker:
 vendor:
 	@go mod tidy && go mod vendor && go mod verify
 
-.PHONY: gen
-# Makes go generate ./...
-gen:
-	@go generate ./...
-
 .PHONY: test
 # Makes go test ./...
 test:
@@ -114,3 +109,7 @@ grafana:
 # Display Docker Swarm container logger
 logs:
 	@docker logs "$$(docker ps -q -f name=${CLUSTER}_${SERVICE_NAME})"
+
+.PHONY: check
+# Make all checks (recommended before commit and push)
+check: vendor all lint test
