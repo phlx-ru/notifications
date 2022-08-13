@@ -7,6 +7,7 @@ require (
 	github.com/AlekSi/pointer v1.2.0
 	github.com/gavv/httpexpect/v2 v2.3.1
 	github.com/go-kratos/kratos/v2 v2.4.0
+	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/mock v1.6.0
 	github.com/google/wire v0.5.0
 	github.com/joho/godotenv v1.4.0
@@ -49,7 +50,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/onsi/gomega v1.19.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/spf13/cobra v1.5.0 // indirect

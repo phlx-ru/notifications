@@ -29,6 +29,13 @@ func wireNotificationRepo(data.Database, log.Logger, metrics.Metrics) biz.Notifi
 	panic(wire.Build(data.ProviderRepoSet))
 }
 
-func wireHTTPServer(data.Database, *conf.Server, *senders.Senders, metrics.Metrics, log.Logger) *http.Server {
+func wireHTTPServer(
+	data.Database,
+	*conf.Server,
+	*conf.Auth,
+	*senders.Senders,
+	metrics.Metrics,
+	log.Logger,
+) *http.Server {
 	panic(wire.Build(server.ProviderSet, data.ProviderRepoSet, biz.ProviderSet, service.ProviderSet))
 }

@@ -36,10 +36,10 @@ func wireNotificationRepo(dataDatabase data.Database, logger log.Logger, metrics
 	return bizNotificationRepo
 }
 
-func wireHTTPServer(dataDatabase data.Database, confServer *conf.Server, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) *http.Server {
+func wireHTTPServer(dataDatabase data.Database, confServer *conf.Server, auth *conf.Auth, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) *http.Server {
 	bizNotificationRepo := data.NewNotificationRepo(dataDatabase, logger, metricsMetrics)
 	notificationUsecase := biz.NewNotificationUsecase(bizNotificationRepo, sendersSenders, metricsMetrics, logger)
 	notificationService := service.NewNotificationService(notificationUsecase, sendersSenders, logger)
-	server2 := server.NewHTTPServer(confServer, notificationService, metricsMetrics, logger)
+	server2 := server.NewHTTPServer(confServer, auth, notificationService, metricsMetrics, logger)
 	return server2
 }

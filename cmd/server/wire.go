@@ -28,7 +28,7 @@ func wireData(*conf.Data, log.Logger) (data.Database, func(), error) {
 }
 
 // wireApp init kratos application.
-func wireApp(context.Context, data.Database, *conf.Server, *senders.Senders, metrics.Metrics, log.Logger) (
+func wireApp(context.Context, data.Database, *conf.Server, *conf.Auth, *senders.Senders, metrics.Metrics, log.Logger) (
 	*kratos.App,
 	error,
 ) {

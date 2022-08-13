@@ -56,6 +56,7 @@ func TestV1Check(t *testing.T) {
 	t.Run(
 		`existed_id_passed`, func(t *testing.T) {
 			expect.POST(`/v1/check`).
+				WithHeader(`Authorization`, `Bearer `+jwtToken).
 				WithJSON(AbstractJSON{`id`: notification.ID}).
 				Expect().
 				Status(http.StatusOK).
@@ -67,6 +68,7 @@ func TestV1Check(t *testing.T) {
 	t.Run(
 		`not_existed_id_passed`, func(t *testing.T) {
 			expect.POST(`/v1/check`).
+				WithHeader(`Authorization`, `Bearer `+jwtToken).
 				WithJSON(AbstractJSON{`id`: notification.ID + 1}).
 				Expect().
 				Status(http.StatusNotFound).
@@ -84,6 +86,7 @@ func TestV1Check(t *testing.T) {
 	t.Run(
 		`negative_id_passed`, func(t *testing.T) {
 			expect.POST(`/v1/check`).
+				WithHeader(`Authorization`, `Bearer `+jwtToken).
 				WithJSON(AbstractJSON{`id`: -4}).
 				Expect().
 				Status(http.StatusBadRequest).
@@ -101,6 +104,7 @@ func TestV1Check(t *testing.T) {
 	t.Run(
 		`id_not_passed`, func(t *testing.T) {
 			expect.POST(`/v1/check`).
+				WithHeader(`Authorization`, `Bearer `+jwtToken).
 				WithJSON(AbstractJSON{`unknown`: `nevermind`}).
 				Expect().
 				Status(http.StatusBadRequest).
@@ -118,6 +122,7 @@ func TestV1Check(t *testing.T) {
 	t.Run(
 		`invalid_id_passed`, func(t *testing.T) {
 			expect.POST(`/v1/check`).
+				WithHeader(`Authorization`, `Bearer `+jwtToken).
 				WithJSON(AbstractJSON{`id`: `incorrect`}).
 				Expect().
 				Status(http.StatusBadRequest).

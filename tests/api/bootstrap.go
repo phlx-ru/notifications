@@ -4,6 +4,7 @@ import (
 	"context"
 	"path"
 
+	"notifications/internal/auth"
 	"notifications/internal/biz"
 	"notifications/internal/clients/telegram"
 	"notifications/internal/conf"
@@ -37,6 +38,7 @@ var (
 	sendersSet       *senders.Senders
 	notificationRepo biz.NotificationRepo
 	httpServer       *http.Server
+	jwtToken         string
 )
 
 func bootstrap() (func(), error) {
@@ -64,6 +66,8 @@ func bootstrap() (func(), error) {
 	if err = c.Scan(&bc); err != nil {
 		return nil, err
 	}
+
+	jwtToken = auth.MakeJWT(bc.Auth.Jwt.Secret)
 
 	logs = logger.New(id, name, version, bc.Log.Level)
 
@@ -109,7 +113,7 @@ func bootstrap() (func(), error) {
 
 	notificationRepo = wireNotificationRepo(database, logs, metric)
 
-	httpServer = wireHTTPServer(database, bc.Server, sendersSet, metric, logs)
+	httpServer = wireHTTPServer(database, bc.Server, bc.Auth, sendersSet, metric, logs)
 
 	cleanup := func() {
 		_ = c.Close()

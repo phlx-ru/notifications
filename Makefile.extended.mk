@@ -110,6 +110,14 @@ grafana:
 logs:
 	@docker logs "$$(docker ps -q -f name=${CLUSTER}_${SERVICE_NAME})"
 
+.PHONY: jwt
+# Generate JWT token for access service HTTP methods
+jwt:
+	@set -e; if [ ! -f ./bin/jwt ] ; \
+		then go build -o ./bin/jwt cmd/jwt/main.go ; \
+	fi
+	@./bin/jwt
+
 .PHONY: check
 # Make all checks (recommended before commit and push)
 check: vendor all lint test

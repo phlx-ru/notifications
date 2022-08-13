@@ -5,17 +5,20 @@ metrics:
   mute: ${METRICS_MUTE:true}
 server:
   http:
-    addr: 0.0.0.0:8000
-    timeout: 1s
+    addr: ${SERVER_HTTP_ADDR:0.0.0.0:8000}
+    timeout: ${SERVER_HTTP_TIMEOUT:1s}
   grpc:
-    addr: 0.0.0.0:9000
-    timeout: 1s
+    addr: ${SERVER_GRPC_ADDR:0.0.0.0:9000}
+    timeout: ${SERVER_GRPC_TIMEOUT:1s}
 data:
   database:
     driver: postgres
     source: host=${POSTGRES_HOST:localhost} port=${POSTGRES_PORT:5432} user=${POSTGRES_USER:postgres} password=${POSTGRES_PASS:postgres} dbname=${POSTGRES_DB:notifications} sslmode=disable
     migrate: ${DATA_DATABASE_MIGRATE:soft} # (soft|hard|none)
     debug: ${DATA_DATABASE_DEBUG:false}
+auth:
+  jwt:
+    secret: ${AUTH_JWT_SECRET}
 senders:
   plain:
     file: ${SENDERS_PLAIN_FILE:./messages.log}

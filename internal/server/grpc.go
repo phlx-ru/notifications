@@ -1,8 +1,6 @@
 package server
 
 import (
-	"time"
-
 	v1notification "notifications/api/notification/v1"
 	"notifications/internal/conf"
 	"notifications/internal/middlewares"
@@ -23,7 +21,7 @@ func NewGRPCServer(
 	logger log.Logger,
 ) *grpc.Server {
 	var opts = []grpc.ServerOption{
-		grpc.Timeout(5 * time.Second), // TODO Check timeout
+		grpc.Timeout(c.Grpc.Timeout.AsDuration()),
 		grpc.Middleware(
 			middlewares.Duration(metric, logger),
 			tracing.Server(),

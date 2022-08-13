@@ -145,7 +145,7 @@ func run() error {
 
 	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender)
 
-	app, err := wireApp(ctx, database, bc.Server, sendersSet, metric, logs)
+	app, err := wireApp(ctx, database, bc.Server, bc.Auth, sendersSet, metric, logs)
 	if err != nil {
 		return err
 	}

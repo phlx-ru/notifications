@@ -11,15 +11,14 @@ import (
 
 	"notifications/ent"
 	"notifications/ent/schema"
+	"notifications/internal/conf"
+	"notifications/internal/data"
 	"notifications/internal/pkg/logger"
 	"notifications/internal/pkg/metrics"
 
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/joho/godotenv"
-
-	"notifications/internal/conf"
-	"notifications/internal/data"
 )
 
 //////////////////////////////////////

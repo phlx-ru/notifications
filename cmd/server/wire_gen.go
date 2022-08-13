@@ -33,12 +33,12 @@ func wireData(confData *conf.Data, logger log.Logger) (data.Database, func(), er
 }
 
 // wireApp init kratos application.
-func wireApp(contextContext context.Context, database data.Database, confServer *conf.Server, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*kratos.App, error) {
+func wireApp(contextContext context.Context, database data.Database, confServer *conf.Server, auth *conf.Auth, sendersSenders *senders.Senders, metricsMetrics metrics.Metrics, logger log.Logger) (*kratos.App, error) {
 	notificationRepo := data.NewNotificationRepo(database, logger, metricsMetrics)
 	notificationUsecase := biz.NewNotificationUsecase(notificationRepo, sendersSenders, metricsMetrics, logger)
 	notificationService := service.NewNotificationService(notificationUsecase, sendersSenders, logger)
 	grpcServer := server.NewGRPCServer(confServer, notificationService, metricsMetrics, logger)
-	httpServer := server.NewHTTPServer(confServer, notificationService, metricsMetrics, logger)
+	httpServer := server.NewHTTPServer(confServer, auth, notificationService, metricsMetrics, logger)
 	app := newApp(contextContext, logger, grpcServer, httpServer)
 	return app, nil
 }

@@ -9,8 +9,9 @@ message Bootstrap {
   Log log = 1;
   Metrics metrics = 2;
   Server server = 3;
-  Data data = 4;
-  Senders senders = 5;
+  Auth auth = 4;
+  Data data = 5;
+  Senders senders = 6;
 }
 
 message Log {
@@ -35,6 +36,13 @@ message Server {
   }
   HTTP http = 1;
   GRPC grpc = 2;
+}
+
+message Auth {
+  message JWT {
+    string secret = 1;
+  }
+  JWT jwt = 1;
 }
 
 message Data {

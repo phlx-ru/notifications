@@ -29,6 +29,8 @@ METRICS_MUTE=false
 DATA_DATABASE_MIGRATE=hard
 DATA_DATABASE_DEBUG=false
 
+AUTH_JWT_SECRET=doedoesdeezdodge
+
 POSTGRES_USER=postgres
 POSTGRES_PASS=postgres
 POSTGRES_DB=notifications
