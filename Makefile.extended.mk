@@ -2,10 +2,10 @@ CURRENT_DIRECTORY := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 INFRA_DIRECTORY   := $(realpath $(CURRENT_DIRECTORY)/../infra)
 SERVICE_NAME      := $(notdir $(CURRENT_DIRECTORY))
 CONFIG_SWARM      := docker-compose.swarm.yml
-REGISTRY_HOST     := registry.services.phlx.ru
 CLUSTER           := swarm
 DOTENV            := .env
 SERVICES          := server worker
+REGISTRY_HOST     := $(shell cat $(INFRA_DIRECTORY)/$(DOTENV) | grep "REGISTRY_HOST" | cut -d "=" -f 2)
 
 .PHONY: path
 # Show command how add Go binaries to PATH making it accessible after `go install ...`
