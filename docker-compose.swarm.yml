@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   notifications_server:
-    image: registry.services.phlx.ru/notifications_server:latest
+    image: ${REGISTRY_HOST}/notifications_server:latest
     volumes:
     - ./configs:/data/conf
     logging:
@@ -40,7 +40,7 @@ services:
         window: 120s
 
   notifications_worker:
-    image: registry.services.phlx.ru/notifications_worker:latest
+    image: ${REGISTRY_HOST}/notifications_worker:latest
     volumes:
       - ./configs:/data/conf
     logging:
