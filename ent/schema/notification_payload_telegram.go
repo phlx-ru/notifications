@@ -15,12 +15,13 @@ var (
 type PayloadTelegram struct {
 	PayloadTyped `json:"-"`
 
-	ChatID                string `json:"chat_id"`
-	Text                  string `json:"text"`
-	ParseMode             string `json:"parse_mode,omitempty"`
-	DisableWebPagePreview string `json:"disable_web_page_preview,omitempty"`
-	DisableNotification   string `json:"disable_notification,omitempty"`
-	ProtectContent        string `json:"protect_content,omitempty"`
+	// Attributes based on https://core.telegram.org/bots/api#sendmessage
+	ChatID                string `json:"chat_id"`                            // Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	Text                  string `json:"text"`                               // Text of the message to be sent, 1-4096 characters after entities parsing
+	ParseMode             string `json:"parse_mode,omitempty"`               // Mode for parsing entities in the message text. See formatting options (https://core.telegram.org/bots/api#formatting-options) for more details.
+	DisableWebPagePreview string `json:"disable_web_page_preview,omitempty"` // Disables link previews for links in this message
+	DisableNotification   string `json:"disable_notification,omitempty"`     // Sends the message silently (https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
+	ProtectContent        string `json:"protect_content,omitempty"`          // Protects the contents of the sent message from forwarding and saving
 }
 
 func (p Payload) ToPayloadTelegram() (*PayloadTelegram, error) {

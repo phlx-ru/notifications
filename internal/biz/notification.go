@@ -63,9 +63,8 @@ var (
 	ErrNotificationNotFound = errors.New(`notification not found`)
 )
 
-// NotificationRepo is a Notifications repo.
 type NotificationRepo interface {
-	Save(context.Context, *ent.Notification) (*ent.Notification, error)
+	Create(context.Context, *ent.Notification) (*ent.Notification, error)
 
 	Update(context.Context, *ent.Notification) (*ent.Notification, error)
 
@@ -87,7 +86,6 @@ type NotificationRepo interface {
 	CountWaitingNotifications(ctx context.Context) (int, error)
 }
 
-// NotificationUsecase is a Greeter usecase.
 type NotificationUsecase struct {
 	repo    NotificationRepo
 	senders *senders.Senders
@@ -108,7 +106,6 @@ type NotificationOutDTO struct {
 	Sent bool
 }
 
-// NewNotificationUsecase new a Notification usecase.
 func NewNotificationUsecase(
 	repo NotificationRepo,
 	senders *senders.Senders,
@@ -277,7 +274,7 @@ func (uc *NotificationUsecase) SendNotification(ctx context.Context, dto *Notifi
 		)
 
 		var notification *ent.Notification
-		notification, err = uc.repo.Save(ctx, model)
+		notification, err = uc.repo.Create(ctx, model)
 		if notification != nil && notification.ID != 0 {
 			result.ID = int64(notification.ID)
 		}
@@ -309,7 +306,7 @@ func (uc *NotificationUsecase) EnqueueNotification(ctx context.Context, dto *Not
 			notification.Status = schema.StatusPending
 		},
 	)
-	notification, err := uc.repo.Save(ctx, model)
+	notification, err := uc.repo.Create(ctx, model)
 	if notification != nil && notification.ID != 0 {
 		result.ID = int64(notification.ID)
 	}

@@ -22,8 +22,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationClient interface {
+	// Enqueues notification to internal queue with maximum latency 1000ms
 	Enqueue(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*EnqueueResponse, error)
+	// Immediately send notification to recipient — waiting for response may be long
 	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendResponse, error)
+	// Check notification status by id
 	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error)
 }
 
@@ -66,8 +69,11 @@ func (c *notificationClient) Check(ctx context.Context, in *CheckRequest, opts .
 // All implementations must embed UnimplementedNotificationServer
 // for forward compatibility
 type NotificationServer interface {
+	// Enqueues notification to internal queue with maximum latency 1000ms
 	Enqueue(context.Context, *SendRequest) (*EnqueueResponse, error)
+	// Immediately send notification to recipient — waiting for response may be long
 	Send(context.Context, *SendRequest) (*SendResponse, error)
+	// Check notification status by id
 	Check(context.Context, *CheckRequest) (*CheckResponse, error)
 	mustEmbedUnimplementedNotificationServer()
 }

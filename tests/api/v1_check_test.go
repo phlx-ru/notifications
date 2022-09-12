@@ -42,7 +42,7 @@ func TestV1Check(t *testing.T) {
 				SentAt:    &now,
 			}
 
-			notification, err = notificationRepo.Save(ctx, model)
+			notification, err = notificationRepo.Create(ctx, model)
 			require.NoError(t, err)
 
 			server = httptest.NewServer(httpServer)

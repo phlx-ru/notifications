@@ -1,6 +1,8 @@
 GOHOSTOS:=$(shell go env GOHOSTOS)
 GOPATH:=$(shell go env GOPATH)
 VERSION=$(shell git describe --tags --always)
+OPENAPI_VERSION := 1.1.1
+OPENAPI_TITLE   := "Notifications API"
 
 ifeq ($(GOHOSTOS), windows)
 	#the `find.exe` is different from `find` in bash/shell.
@@ -40,7 +42,7 @@ api:
  	       --go-errors_out=paths=source_relative:./api \
  	       --go-http_out=paths=source_relative:./api \
  	       --go-grpc_out=paths=source_relative:./api \
-	       --openapi_out=fq_schema_naming=true,default_response=false:. \
+	       --openapi_out=fq_schema_naming=true,default_response=false,version=${OPENAPI_VERSION},title=${OPENAPI_TITLE}:. \
 	       $(API_PROTO_FILES)
 
 .PHONY: build

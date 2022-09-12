@@ -51,11 +51,11 @@ lint:
 # Update service in Docker Swarm without downtime
 update:
 	@set -e; for service in ${SERVICES}; \
-		do docker pull ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest \
+		do docker pull ${REGISTRY_HOST}/${SERVICE_NAME}-$${service}:latest \
 			&& docker service update \
 			--with-registry-auth \
-			--image ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest \
-			${CLUSTER}_${SERVICE_NAME}_$${service} ; \
+			--image ${REGISTRY_HOST}/${SERVICE_NAME}-$${service}:latest \
+			${CLUSTER}_${SERVICE_NAME}-$${service} ; \
 	done
 
 .PHONY: deploy
@@ -73,9 +73,9 @@ deploy:
 # Remove service from Docker Swarm
 undeploy:
 	@set -e; for service in ${SERVICES}; \
-		do if docker service ls | grep -q "${CLUSTER}_${SERVICE_NAME}_$${service}" ; \
-			then docker service rm ${CLUSTER}_${SERVICE_NAME}_$${service} ; \
-			else echo "${CLUSTER}_${SERVICE_NAME}_$${service} is already undeployed" ; \
+		do if docker service ls | grep -q "${CLUSTER}_${SERVICE_NAME}-$${service}" ; \
+			then docker service rm ${CLUSTER}_${SERVICE_NAME}-$${service} ; \
+			else echo "${CLUSTER}_${SERVICE_NAME}-$${service} is already undeployed" ; \
 		fi ; \
 	done
 
@@ -83,16 +83,16 @@ undeploy:
 # Build and push image to registry
 push:
 	@set -e; for service in ${SERVICES}; \
-		do docker build -t ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest \
+		do docker build -t ${REGISTRY_HOST}/${SERVICE_NAME}-$${service}:latest \
 			-f ${CURRENT_DIRECTORY}/Dockerfile-$${service} ${CURRENT_DIRECTORY}/. \
-			&& docker push ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest ; \
+			&& docker push ${REGISTRY_HOST}/${SERVICE_NAME}-$${service}:latest ; \
 	done
 
 .PHONY: push
 # Build and push image to registry
 pull:
 	@set -e; for service in ${SERVICES}; \
-		do docker pull ${REGISTRY_HOST}/${SERVICE_NAME}_$${service}:latest ; \
+		do docker pull ${REGISTRY_HOST}/${SERVICE_NAME}-$${service}:latest ; \
 	done
 
 .PHONY: env
@@ -103,7 +103,7 @@ env:
 .PHONY: grafana
 # Copy Grafana Dashboard file ./grafana_dashboard.json to infra Grafana dashboards directory
 grafana:
-	@cp -u ./grafana_dashboard.json ${INFRA_DIRECTORY}/grafana/dashboards/service-notifications.json
+	@cp -u ./grafana_dashboard.json ${INFRA_DIRECTORY}/grafana/dashboards/service-${SERVICE_NAME}.json
 
 .PHONY: logs
 # Display Docker Swarm container logger

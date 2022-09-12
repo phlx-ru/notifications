@@ -3,13 +3,15 @@
 
 openapi: 3.0.3
 info:
-    title: Notification API
-    version: 0.0.1
+    title: Notifications API
+    description: This API provides simple interface for send custom notifications in various channel with obvious behaviour.
+    version: 1.1.1
 paths:
     /v1/check:
         post:
             tags:
                 - Notification
+            description: Check notification status by id
             operationId: Notification_Check
             requestBody:
                 content:
@@ -28,6 +30,7 @@ paths:
         post:
             tags:
                 - Notification
+            description: Enqueues notification to internal queue with maximum latency 1000ms
             operationId: Notification_Enqueue
             requestBody:
                 content:
@@ -46,6 +49,7 @@ paths:
         post:
             tags:
                 - Notification
+            description: Immediately send notification to recipient — waiting for response may be long
             operationId: Notification_Send
             requestBody:
                 content:
@@ -67,45 +71,63 @@ components:
             properties:
                 id:
                     type: integer
+                    description: Notification identifier
                     format: int64
+            description: Request for check status
         notification.v1.CheckResponse:
             type: object
             properties:
                 status:
                     type: integer
+                    description: Notification status number
                     format: enum
+            description: Response for check status
         notification.v1.EnqueueResponse:
             type: object
             properties:
                 id:
                     type: integer
+                    description: Notification identifier
                     format: int64
+            description: Response by enqueuing message
         notification.v1.SendRequest:
+            required:
+                - type
+                - payload
             type: object
             properties:
                 type:
                     type: integer
+                    description: Type of notification channel
                     format: enum
                 payload:
                     type: object
                     additionalProperties:
                         type: string
+                    description: Notification message payload
                 plannedAt:
                     type: string
+                    description: Planned time to send message (works with enqueue)
                     format: date-time
                 ttl:
                     type: integer
+                    description: Time to Live for notification in seconds
                     format: uint64
                 senderId:
                     type: integer
+                    description: Sender identifier (user id from auth service)
                     format: int64
+            description: Basic notification request
         notification.v1.SendResponse:
             type: object
             properties:
                 id:
                     type: integer
+                    description: Notification identifier
                     format: int64
                 sent:
                     type: boolean
+                    description: Is notification was sent? May be false if it will enqueued
+            description: Response by sending message
 tags:
     - name: Notification

@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  notifications_server:
+  notifications-server:
     image: ${REGISTRY_HOST}/notifications_server:latest
     volumes:
     - ./configs:/data/conf
@@ -39,7 +39,7 @@ services:
         max_attempts: 3
         window: 120s
 
-  notifications_worker:
+  notifications-worker:
     image: ${REGISTRY_HOST}/notifications_worker:latest
     volumes:
       - ./configs:/data/conf

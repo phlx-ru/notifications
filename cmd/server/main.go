@@ -29,7 +29,7 @@ var (
 	// Name is the name of the compiled software.
 	Name = `notifications_server`
 	// Version is the version of the compiled software.
-	Version = `0.0.1`
+	Version = `1.1.1`
 	// flagconf is the config flag.
 	flagconf string
 	// dotenv is loaded from config path .env file

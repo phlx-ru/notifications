@@ -8,9 +8,6 @@ package main
 import (
 	"context"
 
-	"notifications/internal/pkg/metrics"
-	"notifications/internal/senders"
-
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -18,6 +15,8 @@ import (
 	"notifications/internal/biz"
 	"notifications/internal/conf"
 	"notifications/internal/data"
+	"notifications/internal/pkg/metrics"
+	"notifications/internal/senders"
 	"notifications/internal/server"
 	"notifications/internal/service"
 )

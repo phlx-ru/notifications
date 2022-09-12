@@ -4,10 +4,14 @@ package notification.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
 
 option go_package = "notifications/api/notification/v1;v1";
 
+// This API provides simple interface for send custom notifications in various channel with obvious behaviour.
 service Notification {
+
+  // Enqueues notification to internal queue with maximum latency 1000ms
   rpc Enqueue (SendRequest) returns (EnqueueResponse) {
     option (google.api.http) = {
       post: "/v1/enqueue"
@@ -15,6 +19,7 @@ service Notification {
     };
   }
 
+  // Immediately send notification to recipient — waiting for response may be long
   rpc Send (SendRequest) returns (SendResponse) {
     option (google.api.http) = {
       post: "/v1/send"
@@ -22,6 +27,7 @@ service Notification {
     };
   }
 
+  // Check notification status by id
   rpc Check (CheckRequest) returns (CheckResponse) {
     option (google.api.http) = {
       post: "/v1/check"
@@ -30,6 +36,7 @@ service Notification {
   }
 }
 
+// Types of notification channel
 enum Type {
   plain = 0;
   email = 1;
@@ -39,6 +46,7 @@ enum Type {
   whatsapp = 5;
 }
 
+// Notification statuses
 enum Status {
   draft = 0;
   pending = 1;
@@ -47,27 +55,51 @@ enum Status {
   fail = 4;
 }
 
+// Basic notification request
 message SendRequest {
-  Type type = 1;
-  map<string, string> payload = 2;
+  // Type of notification channel
+  Type type = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+
+  // Notification message payload
+  map<string, string> payload = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+
+  // Planned time to send message (works with enqueue)
   google.protobuf.Timestamp plannedAt = 3;
+
+  // Time to Live for notification in seconds
   uint64 ttl = 4;
+
+  // Sender identifier (user id from auth service)
   int64 senderId = 5;
 }
 
+// Response by sending message
 message SendResponse {
+  // Notification identifier
   int64 id = 1;
+
+  // Is notification was sent? May be false if it will enqueued
   bool sent = 2;
 }
 
+// Response by enqueuing message
 message EnqueueResponse {
+  // Notification identifier
   int64 id = 1;
 }
 
+// Request for check status
 message CheckRequest {
-  int64 id = 1; // Notification ID
+  // Notification identifier
+  int64 id = 1;
 }
 
+// Response for check status
 message CheckResponse {
-  Status status = 1; /* Status of Notification */
+  // Notification status number
+  Status status = 1;
 }

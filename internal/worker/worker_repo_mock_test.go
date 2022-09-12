@@ -51,6 +51,21 @@ func (mr *MockNotificationRepoMockRecorder) CountWaitingNotifications(ctx interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountWaitingNotifications", reflect.TypeOf((*MockNotificationRepo)(nil).CountWaitingNotifications), ctx)
 }
 
+// Create mocks base method.
+func (m *MockNotificationRepo) Create(arg0 context.Context, arg1 *ent.Notification) (*ent.Notification, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret0, _ := ret[0].(*ent.Notification)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockNotificationRepoMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNotificationRepo)(nil).Create), arg0, arg1)
+}
+
 // DeleteByID mocks base method.
 func (m *MockNotificationRepo) DeleteByID(ctx context.Context, id int) error {
 	m.ctrl.T.Helper()
@@ -93,21 +108,6 @@ func (m *MockNotificationRepo) ListWaitingNotificationsWithLock(ctx context.Cont
 func (mr *MockNotificationRepoMockRecorder) ListWaitingNotificationsWithLock(ctx, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWaitingNotificationsWithLock", reflect.TypeOf((*MockNotificationRepo)(nil).ListWaitingNotificationsWithLock), ctx, limit)
-}
-
-// Save mocks base method.
-func (m *MockNotificationRepo) Save(arg0 context.Context, arg1 *ent.Notification) (*ent.Notification, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0, arg1)
-	ret0, _ := ret[0].(*ent.Notification)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Save indicates an expected call of Save.
-func (mr *MockNotificationRepoMockRecorder) Save(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockNotificationRepo)(nil).Save), arg0, arg1)
 }
 
 // Transaction mocks base method.

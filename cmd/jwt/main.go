@@ -80,7 +80,7 @@ func run() error {
 		`white`:  "\u001B[37m",
 	}
 
-	fmt.Println(colors["blue"] + `JWT token generated:` + colors["reset"])
-	fmt.Println(colors["green"] + token + colors["reset"])
+	fmt.Println(colors["green"] + `JWT token generated:` + colors["reset"])
+	fmt.Println(colors["blue"] + token + colors["reset"])
 	return nil
 }

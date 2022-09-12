@@ -41,39 +41,33 @@ func NewNotificationRepo(data Database, logs log.Logger, metric metrics.Metrics)
 	}
 }
 
-func (r *notificationRepo) Save(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
+func (r *notificationRepo) Create(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
 	defer r.metric.NewTiming().Send(metricSaveTimings)
 	if n == nil {
 		return nil, errors.New("notification is empty")
 	}
 
-	creating := r.client(ctx).Notification.Create().
+	return r.client(ctx).Notification.Create().
 		SetSenderID(n.SenderID).
 		SetType(n.Type).
 		SetPayload(n.Payload).
 		SetTTL(n.TTL).
 		SetStatus(n.Status).
 		SetPlannedAt(n.PlannedAt).
-		SetRetries(n.Retries)
-
-	if n.SentAt != nil {
-		creating = creating.SetSentAt(*n.SentAt)
-	}
-
-	if n.RetryAt != nil {
-		creating = creating.SetRetryAt(*n.RetryAt)
-	}
-
-	return creating.Save(ctx)
+		SetRetries(n.Retries).
+		SetNillableSentAt(n.SentAt).
+		SetNillableRetryAt(n.RetryAt).
+		Save(ctx)
 }
 
+// Update all fields of notification record. CAUTION: if field in 'n' not set — it will be cleared
 func (r *notificationRepo) Update(ctx context.Context, n *ent.Notification) (*ent.Notification, error) {
 	defer r.metric.NewTiming().Send(metricUpdateTimings)
 	if n == nil {
 		return nil, errors.New("notification is empty")
 	}
-	updating := r.client(ctx).Notification.
-		UpdateOne(n).
+
+	updated := r.client(ctx).Notification.UpdateOne(n).
 		SetSenderID(n.SenderID).
 		SetType(n.Type).
 		SetPayload(n.Payload).
@@ -83,14 +77,18 @@ func (r *notificationRepo) Update(ctx context.Context, n *ent.Notification) (*en
 		SetRetries(n.Retries)
 
 	if n.SentAt != nil {
-		updating = updating.SetSentAt(*n.SentAt)
+		updated.SetSentAt(*n.SentAt)
+	} else {
+		updated.ClearSentAt()
 	}
 
 	if n.RetryAt != nil {
-		updating = updating.SetRetryAt(*n.RetryAt)
+		updated.SetRetryAt(*n.RetryAt)
+	} else {
+		updated.ClearRetryAt()
 	}
 
-	return updating.Save(ctx)
+	return updated.Save(ctx)
 }
 
 func (r *notificationRepo) FindByID(ctx context.Context, id int) (*ent.Notification, error) {

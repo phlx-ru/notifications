@@ -17,21 +17,13 @@ func FilterByID(id int) predicate.Notification {
 
 func FilterByType(types ...schema.NotificationType) predicate.Notification {
 	return func(selector *entSql.Selector) {
-		var args []any
-		for _, typ := range types {
-			args = append(args, typ)
-		}
-		selector.Where(entSql.P().In(`type`, args...))
+		selector.Where(entSql.P().In(`type`, itemsToAny(types)...))
 	}
 }
 
 func FilterByStatus(statuses ...schema.NotificationStatus) predicate.Notification {
 	return func(selector *entSql.Selector) {
-		var args []any
-		for _, status := range statuses {
-			args = append(args, status)
-		}
-		selector.Where(entSql.P().In(`status`, args...))
+		selector.Where(entSql.P().In(`status`, itemsToAny(statuses)...))
 	}
 }
 
@@ -61,4 +53,12 @@ func FilterForUpdateWithSkipLocked() predicate.Notification {
 	return func(selector *entSql.Selector) {
 		selector.ForUpdate(entSql.WithLockAction(entSql.SkipLocked))
 	}
+}
+
+func itemsToAny[T comparable](items []T) []any {
+	res := []any{}
+	for _, item := range items {
+		res = append(res, item)
+	}
+	return res
 }

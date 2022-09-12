@@ -5,6 +5,7 @@ import (
 
 	"notifications/ent/schema"
 	"notifications/internal/biz"
+	"notifications/internal/pkg/logger"
 	"notifications/internal/senders"
 
 	v1 "notifications/api/notification/v1"
@@ -42,11 +43,15 @@ type NotificationService struct {
 	logger *log.Helper
 }
 
-func NewNotificationService(u *biz.NotificationUsecase, s *senders.Senders, l log.Logger) *NotificationService {
+func NewNotificationService(
+	usecase *biz.NotificationUsecase,
+	senders *senders.Senders,
+	logs log.Logger,
+) *NotificationService {
 	return &NotificationService{
-		usecase: u,
-		senders: s,
-		logger:  log.NewHelper(l),
+		usecase: usecase,
+		senders: senders,
+		logger:  logger.NewHelper(logs, "ts", log.DefaultTimestamp, "scope", "service-notification"),
 	}
 }
 
