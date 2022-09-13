@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,7 +24,7 @@ const (
 )
 
 type Client interface {
-	SendMessage(request SendMessageRequest) (*SendMessageResponse, error)
+	SendMessage(ctx context.Context, request SendMessageRequest) (*SendMessageResponse, error)
 }
 
 type Telegram struct {
@@ -58,7 +59,7 @@ func New(botToken string, client transport.HTTPClient, metric metrics.Metrics, l
 	}
 }
 
-func (t *Telegram) SendMessage(request SendMessageRequest) (*SendMessageResponse, error) {
+func (t *Telegram) SendMessage(ctx context.Context, request SendMessageRequest) (*SendMessageResponse, error) {
 	defer t.metric.NewTiming().Send(metricSendMessageTimings)
 	var err error
 	defer func() {
@@ -67,7 +68,6 @@ func (t *Telegram) SendMessage(request SendMessageRequest) (*SendMessageResponse
 			t.logs.Errorf(`failed to sendMessage: %v`, err)
 		} else {
 			t.metric.Increment(metricSendMessageSuccess)
-			t.logs.Info(`sendMessage ok`)
 		}
 	}()
 
@@ -85,7 +85,7 @@ func (t *Telegram) SendMessage(request SendMessageRequest) (*SendMessageResponse
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := t.client.Do(req)
+	resp, err := t.client.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

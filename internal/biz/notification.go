@@ -57,6 +57,10 @@ const (
 	metricProcessTelegramNotificationSuccess = `biz.notification.processTelegramNotification.success`
 	metricProcessTelegramNotificationFailure = `biz.notification.processTelegramNotification.failure`
 	metricProcessTelegramNotificationTimings = `biz.notification.processTelegramNotification.timings`
+
+	metricProcessSMSNotificationSuccess = `biz.notification.processSmsNotification.success`
+	metricProcessSMSNotificationFailure = `biz.notification.processSmsNotification.failure`
+	metricProcessSMSNotificationTimings = `biz.notification.processSmsNotification.timings`
 )
 
 var (
@@ -227,6 +231,7 @@ func (uc *NotificationUsecase) SendNotificationWithoutSaving(ctx context.Context
 	processors := map[v1.Type]NotificationProcessor{
 		v1.Type_plain:    uc.ProcessPlainNotification,
 		v1.Type_email:    uc.ProcessEmailNotification,
+		v1.Type_sms:      uc.ProcessSMSNotification,
 		v1.Type_telegram: uc.ProcessTelegramNotification,
 	}
 
@@ -370,6 +375,30 @@ func (uc *NotificationUsecase) ProcessPlainNotification(ctx context.Context, pay
 		return err
 	}
 	err = uc.senders.PlainSender.Send(ctx, payloadPlain.Message)
+	return err
+}
+
+func (uc *NotificationUsecase) ProcessSMSNotification(ctx context.Context, payload *schema.Payload) error {
+	defer uc.metric.NewTiming().Send(metricProcessSMSNotificationTimings)
+	var err error
+	defer func() {
+		if err != nil {
+			uc.metric.Increment(metricProcessSMSNotificationFailure)
+			uc.logs.WithContext(ctx).Errorf("failed to process sms notification: %v", err)
+		} else {
+			uc.metric.Increment(metricProcessSMSNotificationSuccess)
+			uc.logs.WithContext(ctx).Info("successfully process sms notification")
+		}
+	}()
+	var payloadSMS *schema.PayloadSMS
+	payloadSMS, err = payload.ToPayloadSMS()
+	if err != nil {
+		return err
+	}
+	if err = payloadSMS.Validate(); err != nil {
+		return err
+	}
+	err = uc.senders.SMSAeroSender.Send(ctx, payloadSMS.Phone, payloadSMS.Text)
 	return err
 }
 

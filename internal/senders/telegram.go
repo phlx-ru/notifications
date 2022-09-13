@@ -11,9 +11,9 @@ import (
 )
 
 const (
+	metricTelegramSendTimings = `senders.telegram.send.timings`
 	metricTelegramSendSuccess = `senders.telegram.send.success`
 	metricTelegramSendFailure = `senders.telegram.send.failure`
-	metricTelegramSendTimings = `senders.telegram.send.timings`
 )
 
 type TelegramSenderOption func(request *telegram.SendMessageRequest)
@@ -73,7 +73,7 @@ func (t *Telegram) Send(ctx context.Context, chatID, text string, options ...Tel
 		option(request)
 	}
 
-	_, err := t.client.SendMessage(*request)
+	_, err := t.client.SendMessage(ctx, *request)
 	if err != nil {
 		t.metric.Increment(metricTelegramSendFailure)
 		t.logs.WithContext(ctx).Errorf("failed telegram notification: %v", err)

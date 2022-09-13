@@ -73,7 +73,15 @@ message Senders {
   message Telegram {
     string botToken = 1;
   }
+  message SMS {
+    message Aero {
+      string email = 1;
+      string apiKey = 2;
+    }
+    Aero aero = 1;
+  }
   Plain plain = 1;
   Email email = 2;
   Telegram telegram = 3;
+  SMS sms = 4;
 }

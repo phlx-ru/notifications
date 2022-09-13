@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"notifications/internal/biz"
+	"notifications/internal/clients/smsaero"
 	"notifications/internal/clients/telegram"
 	"notifications/internal/conf"
 	"notifications/internal/pkg/logger"
@@ -126,7 +127,11 @@ func run() error {
 	telegramClient := telegram.New(bc.Senders.Telegram.BotToken, httpClient, metric, logs)
 	telegramSender := senders.NewTelegram(telegramClient, metric, logs)
 
-	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender)
+	aero := bc.Senders.Sms.Aero
+	smsAeroClient := smsaero.New(aero.Email, aero.ApiKey, httpClient, metric, logs)
+	smsAeroSender := senders.NewSMSAero(smsAeroClient, metric, logs)
+
+	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender, smsAeroSender)
 
 	wrkr, err := wireWorker(database, sendersSet, metric, logs)
 	if err != nil {

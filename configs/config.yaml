@@ -29,3 +29,7 @@ senders:
     password: ${SENDERS_EMAIL_PASSWORD}
   telegram:
     botToken: ${SENDERS_TELEGRAM_BOT_TOKEN}
+  sms:
+    aero:
+      email: ${SENDERS_SMS_AERO_EMAIL}
+      apiKey: ${SENDERS_SMS_AERO_API_KEY}

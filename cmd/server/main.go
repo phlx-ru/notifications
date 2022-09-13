@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"notifications/internal/clients/smsaero"
 	"notifications/internal/clients/telegram"
 	"notifications/internal/pkg/logger"
 	"notifications/internal/pkg/metrics"
@@ -143,7 +144,11 @@ func run() error {
 	telegramClient := telegram.New(bc.Senders.Telegram.BotToken, httpClient, metric, logs)
 	telegramSender := senders.NewTelegram(telegramClient, metric, logs)
 
-	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender)
+	aero := bc.Senders.Sms.Aero
+	smsAeroClient := smsaero.New(aero.Email, aero.ApiKey, httpClient, metric, logs)
+	smsAeroSender := senders.NewSMSAero(smsAeroClient, metric, logs)
+
+	sendersSet := senders.NewSenders(plainSender, emailSender, telegramSender, smsAeroSender)
 
 	app, err := wireApp(ctx, database, bc.Server, bc.Auth, sendersSet, metric, logs)
 	if err != nil {
