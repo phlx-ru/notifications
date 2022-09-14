@@ -3,8 +3,9 @@ package sms
 // see https://www.twilio.com/docs/glossary/what-is-gsm-7-character-encoding
 
 const (
-	limitGSM7 = 160
-	limitUCS2 = 70
+	limitGSM7    = 160
+	limitUCS2    = 70
+	LimitOverall = 918 // min(6 * 153, 14 * 67)
 )
 
 var (
@@ -39,8 +40,9 @@ func IsCompatibleWithGSM7(message string) bool {
 
 // IsExceedsLimit returns true if message exceeds limit for GSM-7 or UCS-2 encodings
 func IsExceedsLimit(message string) bool {
+	runes := []rune(message)
 	if IsCompatibleWithGSM7(message) {
-		return len(message) > limitGSM7
+		return len(runes) > limitGSM7
 	}
-	return len(message) > limitUCS2
+	return len(runes) > limitUCS2
 }

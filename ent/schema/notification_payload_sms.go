@@ -9,10 +9,6 @@ import (
 	pkgStrings "notifications/internal/pkg/strings"
 )
 
-const (
-	messageLimit = 2000
-)
-
 type PayloadSMS struct {
 	PayloadTyped `json:"-"`
 
@@ -33,8 +29,8 @@ func (ps PayloadSMS) Validate() error {
 	if ps.Text == "" {
 		return errors.New(`payload sms has empty field text`)
 	}
-	if len(ps.Text) > messageLimit {
-		return fmt.Errorf(`message exceeds symbols limit of %d`, messageLimit)
+	if len(ps.Text) > sms.LimitOverall {
+		return fmt.Errorf(`message exceeds symbols limit of %d`, sms.LimitOverall)
 	}
 	if ps.Phone == "" {
 		return errors.New(`payload sms has empty field text`)

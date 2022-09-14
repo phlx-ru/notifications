@@ -17,6 +17,7 @@ func TypeToValidatorMap(p *Payload) map[NotificationType]PayloadTypedValidator {
 	return map[NotificationType]PayloadTypedValidator{
 		TypePlain:    ToPayloadTypedValidator(p.ToPayloadEmail()),
 		TypeEmail:    ToPayloadTypedValidator(p.ToPayloadEmail()),
+		TypeSMS:      ToPayloadTypedValidator(p.ToPayloadSMS()),
 		TypeTelegram: ToPayloadTypedValidator(p.ToPayloadTelegram()),
 	}
 }
