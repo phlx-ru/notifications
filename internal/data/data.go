@@ -38,6 +38,7 @@ type Data struct {
 type Database interface {
 	DB() *sql.DB
 	Ent() *ent.Client
+	Check(ctx context.Context) error
 	MigrateSoft(ctx context.Context) error
 	MigrateHard(ctx context.Context) error
 	Prepare(ctx context.Context, m conf.Data_Database_Migrate) error
@@ -88,6 +89,11 @@ func (d *Data) DB() *sql.DB {
 
 func (d *Data) Ent() *ent.Client {
 	return d.ent
+}
+
+func (d *Data) Check(ctx context.Context) error {
+	_, err := d.db.QueryContext(ctx, `select now()`)
+	return err
 }
 
 // MigrateSoft only creates and updates schema entities

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kratos/kratos/v2/log"
+
 	"notifications/internal/clients/smsaero"
 	"notifications/internal/pkg/logger"
 	"notifications/internal/pkg/metrics"

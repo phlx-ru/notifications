@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/go-kratos/kratos/v2/log"
+
 	"notifications/internal/pkg/logger"
 	"notifications/internal/pkg/metrics"
 	"notifications/internal/pkg/template"
