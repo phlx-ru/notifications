@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   notifications-server:
-    image: ${REGISTRY_HOST}/notifications_server:latest
+    image: ${REGISTRY_HOST}/notifications-server:latest
     volumes:
     - ./configs:/data/conf
     logging:
@@ -40,7 +40,7 @@ services:
         window: 120s
 
   notifications-worker:
-    image: ${REGISTRY_HOST}/notifications_worker:latest
+    image: ${REGISTRY_HOST}/notifications-worker:latest
     volumes:
       - ./configs:/data/conf
     logging:

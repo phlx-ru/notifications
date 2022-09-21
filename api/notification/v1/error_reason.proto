@@ -10,7 +10,6 @@ enum ErrorReason {
   option (errors.default_code) = 500;
 
   INTERNAL_ERROR = 0 [(errors.code) = 500];
-
   INVALID_REQUEST = 1 [(errors.code) = 400];
   NOTIFICATION_NOT_FOUND = 2 [(errors.code) = 404];
 }
