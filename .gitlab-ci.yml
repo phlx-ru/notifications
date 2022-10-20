@@ -30,4 +30,5 @@ test-job:
     - build
   script:
     - echo "Run Go test for project:"
+    - echo ${DOTENV_TESTING} > ./configs/.env.testing
     - go test -race -parallel 10 ./...
