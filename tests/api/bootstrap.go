@@ -83,7 +83,7 @@ func bootstrap() (func(), error) {
 		return nil, err
 	}
 
-	if err := database.Check(ctx); err != nil {
+	if err = database.Check(ctx); err != nil {
 		return nil, err
 	}
 

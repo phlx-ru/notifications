@@ -68,3 +68,4 @@ issues:
     - "unicode/utf8/utf8.go"
     - "or be unexported"
     - "should have a package comment"
+    - "comment on exported const .* should be of the form"
