@@ -87,6 +87,10 @@ func bootstrap() (func(), error) {
 		return nil, err
 	}
 
+	if err = database.Prepare(ctx, bc.Data.Database.Migrate); err != nil {
+		return nil, err
+	}
+
 	go database.CollectDatabaseMetrics(ctx, metric)
 	go runtime.CollectGoMetrics(ctx, metric)
 
