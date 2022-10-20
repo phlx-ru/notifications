@@ -3,16 +3,6 @@ stages:
   - lint
   - test
 
-check-job:
-  image: "golang:1.19"
-  stage: build
-  tags:
-    - build
-  script:
-    - echo "$DOTENV_TESTING" > ./configs/.env.testing
-    - echo "Check env"
-    - cat ./configs/.env.testing
-
 build-job:
   image: "golang:1.19"
   stage: build
@@ -41,6 +31,4 @@ test-job:
   script:
     - echo "Run Go test for project:"
     - echo "$DOTENV_TESTING" > ./configs/.env.testing
-    - echo "Check env"
-    - cat ./configs/.env.testing
     - go test -race -parallel 10 ./...
