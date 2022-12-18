@@ -38,5 +38,4 @@ test-job:
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres
     POSTGRES_HOST_AUTH_METHOD: trust
-    POSTGRES_HOST: postgres
     ENV: gitlab
