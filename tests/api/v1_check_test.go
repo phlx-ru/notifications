@@ -131,7 +131,7 @@ func TestV1Check(t *testing.T) {
 				ContainsMap(
 					AbstractJSON{
 						`code`:   http.StatusBadRequest,
-						`reason`: `CODEC`,
+						`reason`: `CODEC___________`,
 					},
 				)
 		},
