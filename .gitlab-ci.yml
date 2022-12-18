@@ -1,17 +1,7 @@
 stages:
-  - build
-  - lint
+  #- build
+  #- lint
   - test
-
-services:
-  - postgres:10.21-alpine3.16
-
-variables:
-  POSTGRES_DB: postgres
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_HOST_AUTH_METHOD: trust
-  ENV: gitlab
 
 build-job:
   image: "golang:1.19"
@@ -40,5 +30,12 @@ test-job:
     - build
   script:
     - echo "Run Go test for project:"
-    - echo "$DOTENV_TESTING" > ./configs/.env.testing
     - go test -race -parallel 10 ./...
+  services:
+    - postgres:10.21-alpine3.16
+  variables:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+    ENV: gitlab
