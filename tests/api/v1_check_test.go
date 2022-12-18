@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gavv/httpexpect/v2"
 	v1 "notifications/api/notification/v1"
 	"notifications/ent"
 	"notifications/ent/schema"
 
+	"github.com/gavv/httpexpect/v2"
 	"github.com/stretchr/testify/require"
 )
 

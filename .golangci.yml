@@ -34,15 +34,11 @@ linters:
     - gocritic
     - govet
     - errcheck
-    - deadcode
-    - varcheck
     - ineffassign
     - typecheck
-    - goconst
     - gosec
     - goimports
     - gosimple
-    - unused
     - unparam
     - goconst
     - exportloopref
@@ -51,7 +47,6 @@ linters:
     - prealloc
     - unconvert
     - unused
-    - deadcode
     - nakedret
     - staticcheck
 
@@ -68,4 +63,3 @@ issues:
     - "unicode/utf8/utf8.go"
     - "or be unexported"
     - "should have a package comment"
-    - "comment on exported const .* should be of the form"

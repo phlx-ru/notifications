@@ -50,6 +50,12 @@ type Database interface {
 func NewData(c *conf.Data, logger log.Logger) (Database, func(), error) {
 	logHelper := log.NewHelper(log.With(logger, "module", "ent/data/logger-job"))
 
+	if c.Database.Migrate != conf.Data_Database_none {
+		if err := createDatabaseIfNotExists(c.Database.Driver, c.Database.Source); err != nil {
+			return nil, nil, err
+		}
+	}
+
 	drv, err := entDialectSQL.Open(c.Database.Driver, c.Database.Source)
 	if err != nil {
 		return nil, nil, err

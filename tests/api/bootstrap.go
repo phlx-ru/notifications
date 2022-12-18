@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"os"
 	"path"
 
 	"notifications/internal/auth"
@@ -25,7 +26,6 @@ import (
 
 const (
 	flagconf = `../../configs`
-	dotenv   = `.env.testing`
 	id       = `api`
 	name     = `api-tests`
 	version  = `1.1.1`
@@ -46,6 +46,11 @@ func bootstrap() (func(), error) {
 	var err error
 
 	ctx := context.Background()
+
+	dotenv := `.env.testing`
+	if env := os.Getenv("ENV"); env == "gitlab" {
+		dotenv = `.env.gitlab`
+	}
 
 	envPath := path.Join(flagconf, dotenv)
 	err = godotenv.Overload(envPath)

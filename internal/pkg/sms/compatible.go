@@ -5,7 +5,7 @@ package sms
 const (
 	limitGSM7    = 160
 	limitUCS2    = 70
-	LimitOverall = 918 // min(6 * 153, 14 * 67)
+	LimitOverall = 918 // LimitOverall calculated from min(6 * 153, 14 * 67)
 )
 
 var (
